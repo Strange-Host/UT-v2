@@ -54,7 +54,7 @@ describe('products, stock, customers and leads screens', () => {
     await b.waitFor(() => b.text().includes('MD-1') && !b.text().includes('MD-2'), 'the low stock filter');
 
     await b.visit(`#/product/${shoe.id}`, 'Stock history');
-    expect(b.text()).toContain('Goods received');
+    await b.waitFor(() => b.text().includes('Goods received'), 'the stock history to load');
     expect(b.text()).toContain('Canvas shoe');
     expect(b.doc.querySelector('header nav a.on')?.textContent).toBe('Products');
 
@@ -62,7 +62,7 @@ describe('products, stock, customers and leads screens', () => {
     expect(b.text()).toContain('Strict mode');
     expect(b.text()).toContain('MD-1');
     expect(b.text()).toContain('Recent movements');
-    expect(b.text()).toContain('Goods received');
+    await b.waitFor(() => b.text().includes('Goods received'), 'the recent movements to load');
 
     await b.visit('#/customers', 'Jane Wanjiku');
     await b.visit(`#/customer/${cust.id}`, 'Recent orders');
@@ -133,10 +133,13 @@ describe('products, stock, customers and leads screens', () => {
       await Promise.all(Array.from({ length: 11 }, (_, k) => { const i = start + k; return post(mgr, '/customers', { name: `Bulk ${String(i).padStart(3, '0')}`, phone: `07${String(10_000_000 + i)}` }); }));
     }
     await b.visit('#/customers', 'customers');
-    await b.waitFor(() => /1–50 of \d+/.test(b.text()), 'a page of 50');
+    // Read the pager's own label. Matching against the whole page text is wrong: the last table cell is a 24-hour time, so
+    // "21:55" followed by "1–50 of 55" reads as "21:551–50 of 55", which contains "51–50 of 55" whenever the minute ends in 5.
+    const pagerLabel = () => [...b.doc.querySelectorAll('span.muted')].map((x) => x.textContent ?? '').find((t) => /^\d+–\d+ of \d+$/.test(t));
+    await b.waitFor(() => /^1–50 of \d+$/.test(pagerLabel() ?? ''), 'a page of 50');
     const next = [...b.doc.querySelectorAll('button')].find((x) => x.textContent === 'Next')!;
     b.click(next);
-    await b.waitFor(() => /51–\d+ of \d+/.test(b.text()), 'the second page');
+    await b.waitFor(() => /^51–\d+ of \d+$/.test(pagerLabel() ?? ''), 'the second page');
     expect([...b.doc.querySelectorAll('button')].find((x) => x.textContent === 'Previous')!.hasAttribute('disabled')).toBe(false);
 
     await b.visit('#/customers', 'Add a customer');

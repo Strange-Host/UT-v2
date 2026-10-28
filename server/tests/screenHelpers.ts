@@ -29,7 +29,8 @@ export async function browser(base: string, token: string | null) {
   const text = () => doc.getElementById('app')!.textContent ?? '';
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   const waitFor = async (pred: () => boolean, what: string) => {
-    for (let i = 0; i < 150; i++) { if (pred()) return; await sleep(30); }
+    // A deadline, not a count of tries: when the whole suite runs in parallel each pause can take much longer than 30 ms.
+    for (const end = Date.now() + 10_000; Date.now() < end;) { if (pred()) return; await sleep(30); }
     throw new Error(`timed out waiting for ${what}. Page says: ${text().slice(0, 400)}`);
   };
   const visit = async (hash: string, expectText: string) => {

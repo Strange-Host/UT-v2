@@ -42,7 +42,7 @@ async function browser(token: string | null) {
   w.addEventListener('unhandledrejection', (e: PromiseRejectionEvent) => errors.push(String(e.reason)));
   w.eval(code);
   const text = () => w.document.getElementById('app')!.textContent ?? '';
-  const waitFor = async (pred: () => boolean, what: string) => { for (let i = 0; i < 100; i++) { if (pred()) return; await new Promise((r) => setTimeout(r, 30)); } throw new Error(`timed out waiting for ${what}. Page says: ${text().slice(0, 300)}`); };
+  const waitFor = async (pred: () => boolean, what: string) => { for (const end = Date.now() + 10_000; Date.now() < end;) { if (pred()) return; await new Promise((r) => setTimeout(r, 30)); } throw new Error(`timed out waiting for ${what}. Page says: ${text().slice(0, 300)}`); };
   const visit = async (hash: string, expect: string) => { w.location.hash = hash; await waitFor(() => text().includes(expect), `"${expect}" at ${hash}`); const err = w.document.querySelector('.msg.err'); if (err) throw new Error(`error shown at ${hash}: ${err.textContent}`); };
   return { w, dom, text, visit, waitFor, errors, doc: w.document };
 }
