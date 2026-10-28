@@ -1,5 +1,7 @@
 # Roadmap: where we are, what is left
 
+The ordered build plan is in `BUILD_PLAN.md`.
+
 Source of this table: the `update` branch of the old repo as of 28 Oct 2026, checked by reading `server/src/routes/*` and `frontend/src/api/endpoints.js`. "Server ready" means a route exists; it does **not** mean the adapter or page has been tested against it.
 
 ## Decisions taken
