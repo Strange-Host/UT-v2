@@ -6,6 +6,9 @@ import { HttpError } from './errors.js';
 const KEY_RE = /^[A-Za-z0-9_\-:.]{8,200}$/;
 
 /**
+ * Kept on purpose (build plan 0.3): only its tests import it today. Sales already replay by `clientSaleId`, so the likely first user is the
+ * STK push initiation (plan 5.3), where a double tap must not send two pushes. Delete it if 5.3 is built without it.
+ *
  * Runs fn at most once per (scope, key). A retry with the same key and the same request returns the first response
  * without running fn again; the same key with a DIFFERENT request is refused.
  *
