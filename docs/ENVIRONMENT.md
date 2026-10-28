@@ -1,7 +1,7 @@
 # Environment variables
 
 Host-neutral list of every setting the server and the web app read, taken from `server/src/config.ts` and `frontend/src/api/`.
-Which host runs them (build plan item 0.5) is a separate decision; this list does not change with it.
+The host is Railway (build plan item 0.5); the step-by-step is in `DEPLOY.md`. This list does not depend on the host.
 
 ## Server (`server/`)
 

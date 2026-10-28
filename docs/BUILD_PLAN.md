@@ -37,9 +37,9 @@ No decisions are open. Two small assumptions are listed at the end.
 |---|---|---|
 | 0.1 | Push the repo, turn on CI, get it green on GitHub | Everything else relies on CI |
 | 0.2 | Fix the flaky `masterDataScreens` test (the "Previous" button check does not wait for the page to update) | It failed once under load |
-| 0.3 | Decide: keep or delete `server/src/integrations/stk.ts` (no importer) and `server/src/idempotency.ts` (tests only) | Dead code or a planned feature, which? STK is needed in 5.3 |
+| 0.3 | **Decided (29 Oct 2026): keep both** `server/src/integrations/stk.ts` (no importer) and `server/src/idempotency.ts` (tests only); each now carries a comment naming 5.3 as its first user. Delete `idempotency.ts` if 5.3 is built without it | STK is needed in 5.3 |
 | 0.4 | Make `VITE_USE_NEW_SERVER` default to on in code (today it needs the `.env` file) | Removes a setup trap |
-| 0.5 | Pick the production host and database (Railway Postgres was used before) and write the env var list | Needed for 1.x testing on a real URL |
+| 0.5 | **Decided (29 Oct 2026): Railway + Railway Postgres.** Env var list: `docs/ENVIRONMENT.md`; steps: `docs/DEPLOY.md`. Still to do: the first real deploy, which will confirm the Railway-side steps marked *(check)* | Needed for 1.x testing on a real URL |
 | 0.6 | **Remove sign-in codes (D5):** drop the `two_factor_enabled` column (new migration), remove it from `auth/service.ts` and `auth/staff.ts`, remove `verifyOtp`/`resendOtp` from the auth adapter and any code-entry step on the Login page, and fix the tests that mention it | The feature is not coming back; leaving a dead column and "not available yet" messages misleads |
 
 ## Phase 1: Wire pages whose server routes already exist — no server work
