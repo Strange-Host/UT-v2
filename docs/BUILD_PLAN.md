@@ -25,10 +25,10 @@ Effort sizes are relative, not days: **S** = a few hours, **M** = about a day, *
 | D5 | **Sign-in codes (OTP) are dropped.** PIN plus password lockout stay | 4.7 is removed, and 0.6 removes the leftovers |
 | D6 | **There is no cutover date.** The old system keeps running until we are ready | No deadline pressure; cutover is decided by a readiness gate, not a date (see "Cutover gate") |
 | D7 | **Restyle every page, and preserve the original React frontend while doing it** | 7.4 becomes a page-by-page programme with preservation rules (see "Restyle rules") |
-| D8 | **Costing method: weighted average cost** | Specified in 2.2a |
+| D8 | **Costing method: weighted average cost. Final** (confirmed 28 Oct 2026 after comparing with FIFO) | Specified in 2.2a. A later move to FIFO would need a lots table and a one-time revaluation, so it is out of scope |
 | D9 | **Online orders for stock the shop lacks are accepted and flagged short** on the Money at risk screen, never refused | Specified in 5.2 |
 
-No decisions are open. Assumptions that could still change are listed at the end.
+No decisions are open. Two small assumptions are listed at the end.
 
 ---
 
@@ -177,7 +177,7 @@ There is no deadline, so the old system keeps running and is changed **only for 
 Everything else (the rest of Phases 3, 4, 5, and the restyle) can continue **after** cutover, as long as each missing item has a written manual workaround or the old system stays readable until it is built. Because there is no date, prefer finishing Phase 5 before cutover if online orders matter to you; it costs only time.
 
 ## Assumptions that could still change
-- **Costing:** weighted average is assumed acceptable to whoever does your accounts or tax. Tell me early if they need FIFO, since it changes 2.2a.
+- **Costing:** settled (D8). The only follow-up is to use one costing method consistently for tax; keep a note of the method in the accounting records.
 - **Short online orders:** a customer who cannot be served is refunded through the store; the plan does not build refunds from here.
 - **Restyle:** "every page" means the 27 pages in `frontend/src/pages`; no new design language is being invented, only the existing restyle direction (dense tables, monospace micro-labels, accent rule) extended.
 
