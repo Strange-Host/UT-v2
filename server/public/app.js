@@ -115,7 +115,18 @@ const ROUTES = [
   [/^#\/customers$/, () => viewCustomers()], [/^#\/customer\/(\d+)$/, (m) => viewCustomer(Number(m[1]))],
   [/^#\/leads$/, () => viewLeads()], [/^#\/lead\/(\d+)$/, (m) => viewLead(Number(m[1]))],
 ];
-async function render() {
+// Renders run one at a time, and one that a newer navigation has replaced is skipped. Without this, a slow screen (Money at risk makes four
+// requests) could finish after the screen you moved on to and draw over it, leaving the page showing something other than its address.
+let renderSeq = 0;
+let renderChain = Promise.resolve();
+function render() {
+  const mine = ++renderSeq;
+  const run = () => (mine === renderSeq ? renderNow() : undefined);
+  const result = renderChain.then(run, run);
+  renderChain = result.catch(() => {});
+  return result;
+}
+async function renderNow() {
   if (!S.token) { if (location.hash !== '#/login') { location.hash = '#/login'; return; } return viewLogin(); }
   if (!S.me) { try { const r = await api('GET', '/auth/me'); S.me = r.user; S.perms = r.permissions; } catch { return; } }
   if (S.me.mustChangePassword) return viewChangePassword();
