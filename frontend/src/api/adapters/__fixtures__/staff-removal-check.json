@@ -1,0 +1,14 @@
+{
+  "id": 5,
+  "username": "fixture.cashier",
+  "displayName": "Fixture Cashier",
+  "role": "cashier",
+  "active": true,
+  "erased": false,
+  "activity": {},
+  "hasActivity": false,
+  "canDeletePermanently": true,
+  "canErase": false,
+  "eraseNeedsDeactivation": true,
+  "reasons": []
+}

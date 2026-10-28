@@ -6,7 +6,7 @@ import { useToast } from '../context/UIContext';
 
 import Sheet from './Sheet';
 // One person's access: which individual permissions differ from their role's
-// defaults, and whether sign-in needs an SMS code. Admins cannot be restricted
+// defaults. Admins cannot be restricted
 // (the server enforces it) — that is what guarantees nobody can lock themselves out.
 const CHOICES = [
   { value: 'default', label: 'Role default' },

@@ -122,3 +122,40 @@ describe('what the Finance screens read from the server', () => {
     check('custody-list', custody.body);
   });
 });
+
+describe('what the Staff screens read from the server', () => {
+  it('keeps the staff list, a new account with its one-time password, a reset, the removal check, permissions and sign-out in the recorded shape', async () => {
+    const app = createApp({ pool: db.pool, logger: createLogger('silent') });
+    const admin = await loggedIn(db.pool, 'admin');
+    const as = (r: request.Test) => r.set('Authorization', admin.auth);
+
+    const created = await as(request(app).post('/api/users')).send({ username: 'fixture.cashier', displayName: 'Fixture Cashier', role: 'cashier', email: 'cashier.fixture@shop.test', phone: '0712000111', pin: '4829' });
+    const id = created.body.user.id as number;
+    const list = await as(request(app).get('/api/users'));
+    const one = await as(request(app).get(`/api/users/${id}`));
+    const reset = await as(request(app).post(`/api/users/${id}/reset-password`)).send({});
+    const unlock = await as(request(app).post(`/api/users/${id}/unlock-account`)).send({});
+    const signedOut = await as(request(app).post(`/api/users/${id}/sign-out-everywhere`)).send({});
+    const sessions = await as(request(app).get(`/api/users/${id}/sessions`));
+    const check_ = await as(request(app).get(`/api/users/${id}/removal-check`));
+    const perms = await as(request(app).get(`/api/users/${id}/permissions`));
+    const changed = await as(request(app).put(`/api/users/${id}/permissions`)).send({ overrides: { 'reports.view': true } });
+    const reactivate = await as(request(app).post(`/api/users/${id}/reactivate`)).send({});
+    expect([created.status, list.status, one.status, reset.status, unlock.status, signedOut.status, sessions.status, check_.status, perms.status, changed.status, reactivate.status])
+      .toEqual([201, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200]);
+    expect(changed.body.permissions.find((p: { key: string }) => p.key === 'reports.view').override).toBe(true);
+
+    // Passwords never appear in a person's own record, only in the two answers that issue one.
+    expect(JSON.stringify([list.body, one.body, unlock.body])).not.toMatch(/temporaryPassword|password_hash|pin_hash|scrypt/i);
+    const scrub = (b: Record<string, unknown>) => ({ ...b, ...(b.temporaryPassword ? { temporaryPassword: 'ONE-TIME-PASSWORD' } : {}) });
+    check('staff-list', list.body);
+    check('staff-created', scrub(created.body));
+    check('staff-reset', scrub(reset.body));
+    check('staff-unlock', unlock.body);
+    check('staff-sign-out', signedOut.body);
+    check('staff-sessions', sessions.body);
+    check('staff-removal-check', check_.body);
+    check('staff-permissions', changed.body);
+    check('staff-reactivate', reactivate.body);
+  });
+});

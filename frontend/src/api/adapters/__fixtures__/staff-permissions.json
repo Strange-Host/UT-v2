@@ -1,0 +1,163 @@
+{
+  "user": {
+    "id": 5,
+    "username": "fixture.cashier",
+    "displayName": "Fixture Cashier",
+    "role": "cashier"
+  },
+  "locked": false,
+  "permissions": [
+    {
+      "key": "reports.view",
+      "group": "Reports",
+      "label": "View reports and dashboard figures",
+      "roleDefault": false,
+      "override": true,
+      "effective": true
+    },
+    {
+      "key": "payroll.view",
+      "group": "Team",
+      "label": "View payroll and commission",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "staff.view",
+      "group": "Team",
+      "label": "View the staff list",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "attendance.view",
+      "group": "Team",
+      "label": "View today's attendance and absences",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "expenses.manage",
+      "group": "Money",
+      "label": "Record and edit expenses",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "payments.manage",
+      "group": "Money",
+      "label": "Record and refund payments",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "payments.reconcile",
+      "group": "Money",
+      "label": "Match unmatched payments to orders",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "requisitions.approve",
+      "group": "Money",
+      "label": "Approve or reject requisitions",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "cashsessions.view",
+      "group": "Money",
+      "label": "View other staff's cash sessions",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "sales.void",
+      "group": "Sales",
+      "label": "Void a completed sale",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "orders.pull_online",
+      "group": "Orders",
+      "label": "Pull to-ship orders from Shopify / WooCommerce",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "orders.inspect",
+      "group": "Orders",
+      "label": "Inspect returned parcels",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "orders.resolve_dispute",
+      "group": "Orders",
+      "label": "Resolve payment disputes",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "products.manage",
+      "group": "Stock",
+      "label": "Create, edit and delete products and categories",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "inventory.adjust",
+      "group": "Stock",
+      "label": "Adjust stock and view the stock check",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "shopify.sync",
+      "group": "Stock",
+      "label": "Use Shopify / WooCommerce sync",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "sms.view",
+      "group": "Messaging",
+      "label": "View SMS delivery and retry failed messages",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "couriers.manage",
+      "group": "Orders",
+      "label": "Add and edit couriers",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    },
+    {
+      "key": "leads.intake_routes",
+      "group": "Sales",
+      "label": "Manage web-form lead routing",
+      "roleDefault": false,
+      "override": null,
+      "effective": false
+    }
+  ]
+}

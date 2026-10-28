@@ -9,18 +9,17 @@ import useModules from '../hooks/useModules';
 import Pager, { usePager } from '../components/Pager';
 import { Segmented } from '../components/Picker';
 import RemoveAccountSheet from '../components/RemoveAccountSheet';
-import { passwordHint } from '../utils/passwordRules';
 
 import Sheet from '../components/Sheet';
 import { FormLabel, FormInput, FormSelect, ErrorBanner } from '../components/FormUI';
-const emptyForm = { name: '', phone: '', email: '', password: '', pin: '', role: 'cashier' };
+const emptyForm = { name: '', username: '', phone: '', email: '', pin: '', role: 'cashier' };
 const ROLES = ['admin', 'manager', 'cashier'];
 const ROW_BUTTON = 'min-h-[44px] sm:min-h-[36px] px-3 rounded-lg border border-line text-xs font-medium hover:border-text-muted';
 
-// What an edit sends: the password and PIN only when something was typed, so leaving them blank keeps the current ones.
-function updatePayload({ name, phone, email, role, password, pin }) {
+// What an edit sends: the PIN only when something was typed, so leaving it blank keeps the current one.
+// (The server issues passwords: a new account gets a one-time password, and "Reset password" makes another.)
+function updatePayload({ name, phone, email, role, pin }) {
   const payload = { name, phone, email, role };
-  if (password) payload.password = password;
   if (pin) payload.pin = pin;
   return payload;
 }
@@ -61,7 +60,7 @@ export default function Staff() {
   }
 
   function openEdit(s) {
-    setForm({ name: s.name, phone: s.phone || '', email: s.email, password: '', pin: '', role: s.role });
+    setForm({ name: s.name, username: s.username || '', phone: s.phone || '', email: s.email || '', pin: '', role: s.role });
     setError('');
     setEditing(s);
   }
@@ -70,9 +69,12 @@ export default function Staff() {
     e.preventDefault();
     setError('');
     try {
-      await (editing.id ? staffApi.update(editing.id, updatePayload(form)) : staffApi.create(form));
+      const res = await (editing.id ? staffApi.update(editing.id, updatePayload(form)) : staffApi.create(form));
       refreshStaff();
       setEditing(null);
+      // A new account comes with a one-time password, shown once.
+      const oneTime = !editing.id && res?.data?.data?.temporaryPassword;
+      if (oneTime) setTempPassword({ name: form.name, password: oneTime });
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save staff member.'));
     }
@@ -169,7 +171,10 @@ export default function Staff() {
             )}
             {staff.map((s) => (
               <tr key={s.id} className="border-b border-line last:border-0">
-                <td className="px-4 py-3 font-medium whitespace-nowrap">{s.name}</td>
+                <td className="px-4 py-3 font-medium whitespace-nowrap">
+                  <div>{s.name}</div>
+                  {s.username && <div className="text-xs font-normal text-text-muted">{s.username}</div>}
+                </td>
                 <td className="px-4 py-3 text-text-muted whitespace-nowrap">
                   <div>{s.email}</div>
                   {s.phone && <div className="text-xs">{s.phone}</div>}
@@ -232,6 +237,14 @@ function StaffFormSheet({ editing, form, setForm, error, onSubmit, onClose }) {
       <FormLabel>Name</FormLabel>
       <FormInput required autoFocus value={form.name} onChange={set('name')} />
 
+      {!editing.id && (
+        <>
+          <FormLabel>Username</FormLabel>
+          <FormInput required autoCapitalize="none" autoCorrect="off" spellCheck="false" value={form.username} onChange={set('username')} spacing="mb-1" />
+          <p className="text-xs text-text-muted mb-3">Lowercase letters, digits, dot, dash or underscore. It cannot be changed later.</p>
+        </>
+      )}
+
       <FormLabel>Phone</FormLabel>
       <FormInput required value={form.phone} onChange={set('phone')} placeholder="0712345678" />
 
@@ -242,12 +255,6 @@ function StaffFormSheet({ editing, form, setForm, error, onSubmit, onClose }) {
       <FormSelect value={form.role} onChange={set('role')}>
         {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
       </FormSelect>
-
-      <FormLabel>
-        {editing.id ? 'New password (leave blank to keep current)' : 'Password'}
-      </FormLabel>
-      <FormInput required={!editing.id} type="password" value={form.password} onChange={set('password')} autoComplete="new-password" spacing="mb-1" />
-      <p className="text-xs text-text-muted mb-3">{passwordHint(form.role)}</p>
 
       <FormLabel>
         {editing.id ? 'New register PIN (optional)' : 'Register PIN (optional, 4-6 digits)'}

@@ -16,13 +16,12 @@ Source of this table: the `update` branch of the old repo as of 28 Oct 2026, che
 ## State of each page
 
 ### Done: page talks to the new server through an adapter (has fixtures and tests)
-Login, Change password, Orders, Payments, Payment reconciliation, Couriers.
+Login, Change password, Orders, Payments, Payment reconciliation, Couriers, Staff (with Remove account and Access & permissions; also checked by `frontend/src/e2e/staff.e2e.test.jsx` against a running server).
 
 ### Server ready, adapter still to write
 | Page | New-server routes that exist |
 |---|---|
 | Leads, Convert lead | `/api/leads` (list, create, messages, status, assignee, convert) |
-| Staff, Remove account, Access modal | `/api/users` (create, edit, reactivate, reset password, unlock, sign out everywhere, erase, delete, permissions, PIN) |
 | Products, POS terminal, Sales history | `/api/products`, stock movements, `/api/sales`, void, refund, `/api/till/*` |
 | Payroll, Attendance (clock in/out) | `/api/payroll/*`, `/api/attendance/*` |
 | Security | `/api/security`, `/api/auth/sessions` |

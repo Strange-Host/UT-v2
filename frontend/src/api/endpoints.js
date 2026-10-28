@@ -4,6 +4,7 @@ import { newAuthApi } from './adapters/auth';
 import { newOrdersApi } from './adapters/orders';
 import { newCouriersApi } from './adapters/couriers';
 import { newPaymentsApi, newPaymentReconciliationApi, newCustodyApi } from './adapters/payments';
+import { newStaffApi, newAccessApi } from './adapters/staff';
 
 const legacyAuthApi = {
   login: (email, password, remember = false) => client.post('/auth/login', { email, password, remember }),
@@ -178,7 +179,7 @@ export const cashSessionsApi = {
   getById: (id) => client.get(`/cash-sessions/${id}`),
 };
 
-export const staffApi = {
+const legacyStaffApi = {
   list: (params) => client.get('/staff', { params }),
   getById: (id) => client.get(`/staff/${id}`),
   create: (data) => client.post('/staff', data),
@@ -264,6 +265,7 @@ const legacyCouriersApi = {
   remove: (id) => client.delete(`/couriers/${id}`),
 };
 
+export const staffApi = USE_NEW_SERVER ? newStaffApi : legacyStaffApi;
 export const ordersApi = USE_NEW_SERVER ? newOrdersApi : legacyOrdersApi;
 export const paymentsApi = USE_NEW_SERVER ? newPaymentsApi : legacyPaymentsApi;
 export const paymentReconciliationApi = USE_NEW_SERVER ? newPaymentReconciliationApi : legacyPaymentReconciliationApi;
@@ -288,10 +290,11 @@ export const leadRoutesApi = {
   remove: (id) => client.delete(`/integrations/leads/routes/${id}`),
 };
 
-export const accessApi = {
+const legacyAccessApi = {
   getPermissions: (staffId) => client.get(`/staff/${staffId}/permissions`),
   setPermissions: (staffId, overrides) => client.put(`/staff/${staffId}/permissions`, { overrides }),
 };
+export const accessApi = USE_NEW_SERVER ? newAccessApi : legacyAccessApi;
 
 export const systemApi = {
   getConfig: () => client.get('/system/config'),

@@ -1,0 +1,20 @@
+{
+  "user": {
+    "id": 5,
+    "username": "fixture.cashier",
+    "displayName": "Fixture Cashier",
+    "role": "cashier",
+    "active": true,
+    "email": "cashier.fixture@shop.test",
+    "phone": "0712000111",
+    "hasPin": true,
+    "erased": false,
+    "mustChangePassword": true,
+    "lockedUntil": null,
+    "pinLockedUntil": null,
+    "lastLoginAt": null,
+    "createdAt": "2026-10-28T23:26:29.931Z",
+    "createdBy": "admin3x75q9"
+  },
+  "temporaryPassword": "ONE-TIME-PASSWORD"
+}
