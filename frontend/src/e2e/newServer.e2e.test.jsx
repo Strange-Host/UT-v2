@@ -4,12 +4,14 @@ import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-libra
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import client, { clearAccessToken } from '../api/client';
-import { USE_NEW_SERVER } from '../api/newServer';
 import { authApi } from '../api/endpoints';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ToastProvider, DialogProvider } from '../context/UIContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Login from '../pages/Login';
+
+// Only `npm run test:e2e-new-server` sets this. The normal run has no server to talk to, so these suites are skipped.
+const RUN_E2E = import.meta.env.VITE_E2E_NEW_SERVER === 'true';
 
 // The UNMODIFIED legacy Login page, AuthContext, SessionGuard (lock screen) and ProtectedRoute, talking over real HTTP, from a
 // different origin (http://localhost:5173 -> the API), to a really running new server. Nothing is mocked.
@@ -17,7 +19,7 @@ import Login from '../pages/Login';
 //   terminal 1 (server/):    npm run dev:stack
 //   terminal 2 (frontend/):  npm run test:e2e-new-server
 //
-// Skipped in the normal test run, which has no server to talk to.
+// Skipped in the normal test run, which has no server to talk to (see RUN_E2E below).
 const ACCOUNTS = {
   admin: { email: 'admin@shop.test', password: 'Admin-Dev-Passphrase-1' },
   manager: { email: 'manager@shop.test', password: 'Manager-Dev-Passphrase-1' },
@@ -65,7 +67,7 @@ async function reload(at = '/') {
 }
 const signOutAndForget = async () => { await act(async () => { await auth?.logout?.(); }); clearAccessToken(); cleanup(); };
 
-describe.skipIf(!USE_NEW_SERVER)('the legacy screens against the real new server', () => {
+describe.skipIf(!RUN_E2E)('the legacy screens against the real new server', () => {
   beforeAll(async () => {
     // A throwaway check that the server is really there, so a missing server fails loudly instead of as a pile of timeouts.
     const res = await client.get('/health').catch((e) => e);

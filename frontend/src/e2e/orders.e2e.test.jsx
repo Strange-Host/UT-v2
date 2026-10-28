@@ -4,11 +4,13 @@ import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-li
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import client from '../api/client';
-import { USE_NEW_SERVER } from '../api/newServer';
 import { authApi } from '../api/endpoints';
 import { AuthProvider } from '../context/AuthContext';
 import { ToastProvider, DialogProvider } from '../context/UIContext';
 import Orders from '../pages/Orders';
+
+// Only `npm run test:e2e-new-server` sets this. The normal run has no server to talk to, so these suites are skipped.
+const RUN_E2E = import.meta.env.VITE_E2E_NEW_SERVER === 'true';
 
 // The legacy Orders page (with the few edits made for the new server) on the REAL new server: over HTTP, nothing mocked.
 //   terminal 1 (server/):    npm run dev:stack
@@ -49,7 +51,7 @@ beforeAll(async () => {
 }, 30_000);
 afterEach(() => { cleanup(); });
 
-describe.skipIf(!USE_NEW_SERVER)('the legacy Orders page against the real new server', () => {
+describe.skipIf(!RUN_E2E)('the legacy Orders page against the real new server', () => {
   it('lists an order with what is owed, and opens it with its items and history', async () => {
     const who = `List ${tag()}`;
     const o = await newOrder(who);
