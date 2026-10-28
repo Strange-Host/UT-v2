@@ -144,7 +144,7 @@ export async function erasePersonalData(pool: Pool, input: { userId: number; con
     if (!check.canErase) throw new HttpError(409, 'CANNOT_ERASE_ACCOUNT', check.reasons.join(' ') || 'This account cannot be erased.');
     confirmed(input.confirmName, u);
     await c.query(
-      `UPDATE users SET display_name = $2, email = NULL, phone = NULL, password_hash = $3, pin_hash = NULL, two_factor_enabled = false,
+      `UPDATE users SET display_name = $2, email = NULL, phone = NULL, password_hash = $3, pin_hash = NULL,
               must_change_password = false, failed_attempts = 0, locked_until = NULL, pin_failed_attempts = 0, pin_locked_until = NULL,
               active = false, erased_at = now() WHERE id = $1`, [u.id, `Former staff #${u.id}`, unusable]);
     await c.query(`DELETE FROM user_permissions WHERE user_id = $1`, [u.id]);

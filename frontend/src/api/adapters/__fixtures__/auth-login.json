@@ -11,7 +11,6 @@
     "email": "fixture@shop.test",
     "phone": null,
     "hasPin": false,
-    "twoFactorEnabled": false,
     "erased": false,
     "mustChangePassword": false,
     "lockedUntil": null,

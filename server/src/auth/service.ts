@@ -20,16 +20,16 @@ const BAD_LOGIN = () => new HttpError(401, 'BAD_CREDENTIALS', 'Wrong username or
 const cleanName = (s: unknown) => String(s ?? '').trim().toLowerCase().slice(0, 64) || 'unknown';
 
 export interface UserView {
-  id: number; username: string; displayName: string; role: Role; active: boolean; email: string | null; phone: string | null; hasPin: boolean; twoFactorEnabled: boolean; erased: boolean;
+  id: number; username: string; displayName: string; role: Role; active: boolean; email: string | null; phone: string | null; hasPin: boolean; erased: boolean;
   mustChangePassword: boolean; lockedUntil: Date | null; pinLockedUntil: Date | null; lastLoginAt: Date | null; createdAt: Date; createdBy: string;
 }
 interface UserRow {
-  id: number; username: string; display_name: string; role: Role; active: boolean; email: string | null; phone: string | null; has_pin: boolean; two_factor_enabled: boolean; erased: boolean;
+  id: number; username: string; display_name: string; role: Role; active: boolean; email: string | null; phone: string | null; has_pin: boolean; erased: boolean;
   must_change_password: boolean; locked_until: Date | null; pin_locked_until: Date | null; last_login_at: Date | null; created_at: Date; created_by: string;
 }
-const COLS = `id, username, display_name, role, active, email, phone, (pin_hash IS NOT NULL) AS has_pin, two_factor_enabled, (erased_at IS NOT NULL) AS erased, must_change_password, locked_until, pin_locked_until, last_login_at, created_at, created_by`;
+const COLS = `id, username, display_name, role, active, email, phone, (pin_hash IS NOT NULL) AS has_pin, (erased_at IS NOT NULL) AS erased, must_change_password, locked_until, pin_locked_until, last_login_at, created_at, created_by`;
 const toView = (r: UserRow): UserView => ({
-  id: r.id, username: r.username, displayName: r.display_name, role: r.role, active: r.active, email: r.email, phone: r.phone, hasPin: r.has_pin, twoFactorEnabled: r.two_factor_enabled, erased: r.erased,
+  id: r.id, username: r.username, displayName: r.display_name, role: r.role, active: r.active, email: r.email, phone: r.phone, hasPin: r.has_pin, erased: r.erased,
   mustChangePassword: r.must_change_password, lockedUntil: r.locked_until, pinLockedUntil: r.pin_locked_until, lastLoginAt: r.last_login_at, createdAt: r.created_at, createdBy: r.created_by,
 });
 
@@ -90,10 +90,6 @@ const identifierWhere = 'username = $1 OR email = $1';
  * password", the same cost either way, lockout after repeated failures, and an audit row for every miss. Returns the person on success.
  */
 export async function verifyCredentials(pool: Pool, identifier: string, password: string): Promise<UserView> {
-  return (await checkPassword(pool, identifier, password)).view;
-}
-
-async function checkPassword(pool: Pool, identifier: string, password: string): Promise<{ view: UserView; row: CredentialRow }> {
   const name = cleanName(identifier);
   const lookup = String(identifier ?? '').trim().toLowerCase().slice(0, 254); // an email can be longer than a username
   const u = await loadCredentials(pool, identifierWhere, lookup, 'password');
@@ -110,7 +106,7 @@ async function checkPassword(pool: Pool, identifier: string, password: string): 
     throw BAD_LOGIN();
   }
   await recordSuccess(pool, u, 'password');
-  return { view: toView(u), row: u };
+  return toView(u);
 }
 
 export interface Opened extends NewSession { user: UserView }
@@ -122,13 +118,8 @@ async function openSession(pool: Pool, user: UserView, opts: SessionOptions & { 
   return { ...opened, user: { ...user, lastLoginAt: new Date() } };
 }
 
-// An account with sign-in codes switched on cannot be signed in by password alone. Codes by SMS arrive with the SMS port; until then
-// such an account is refused rather than quietly let in without its second step.
-const TWO_FACTOR_PENDING = () => new HttpError(403, 'TWO_FACTOR_UNAVAILABLE', 'This account needs a sign-in code, and sign-in codes are not available on this server yet. Ask an admin.');
-
 export async function login(pool: Pool, input: { username: string; password: string } & SessionOptions): Promise<Opened> {
-  const { view, row } = await checkPassword(pool, input.username, input.password);
-  if (row.two_factor_enabled) throw TWO_FACTOR_PENDING();
+  const view = await verifyCredentials(pool, input.username, input.password);
   return openSession(pool, view, { ...input, method: 'password' });
 }
 
@@ -144,7 +135,6 @@ export async function loginWithPin(pool: Pool, input: { userId: number; pin: str
   const ok = await verifyPassword(String(input.pin), u.pin_hash ?? DUMMY_HASH);
   if (!ok || !u.pin_hash) { await recordFailure(pool, u, 'pin'); throw new HttpError(401, 'BAD_PIN', 'Invalid PIN.'); }
   await recordSuccess(pool, u, 'pin');
-  if (u.two_factor_enabled) throw new HttpError(403, 'PIN_LOGIN_DISABLED', 'This account needs full sign-in. PIN sign-in is not available.');
   if (u.role !== 'cashier') throw new HttpError(403, 'PIN_LOGIN_CASHIERS_ONLY', 'PIN sign-in is only for cashier accounts. Sign in with your email and password.');
   return openSession(pool, toView(u), { ...input, remember: false, method: 'pin' });
 }
@@ -158,7 +148,7 @@ export async function confirmIdentity(pool: Pool, user: AuthUser, secret: { pass
   const channel: Channel = usingPin ? 'pin' : 'password';
   const u = await loadCredentials(pool, 'id = $1 AND active', user.id, channel);
   if (!u) throw new HttpError(401, 'SESSION_INVALID', 'Your session has ended. Log in again.');
-  if (usingPin && (u.role !== 'cashier' || !u.pin_hash || u.two_factor_enabled)) throw new HttpError(403, 'PIN_NOT_ALLOWED', 'Use your password to continue.');
+  if (usingPin && (u.role !== 'cashier' || !u.pin_hash)) throw new HttpError(403, 'PIN_NOT_ALLOWED', 'Use your password to continue.');
   await assertNotLocked(pool, u, channel);
   const ok = usingPin ? await verifyPassword(String(secret.pin), u.pin_hash!) : await verifyPassword(String(secret.password), u.password_hash);
   if (!ok) {

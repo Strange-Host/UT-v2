@@ -67,13 +67,14 @@ describe('signing in by email', () => {
     expect(bad.body.error.code).toBe('BAD_EMAIL');
   });
 
-  it('refuses an account with sign-in codes switched on rather than letting a password alone through', async () => {
+  it('has no sign-in codes: a password alone signs in, and no two-factor flag is left in the answer or the table (D5)', async () => {
     const p = await person('cashier');
-    await db.pool.query(`UPDATE users SET two_factor_enabled = true WHERE id = $1`, [p.id]);
     const res = await request(app()).post('/api/auth/login').send({ email: p.email, password: p.password });
-    expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe('TWO_FACTOR_UNAVAILABLE');
-    expect(res.body.token).toBeUndefined();
+    expect(res.status).toBe(200);
+    expect(res.body.token).toBeTruthy();
+    expect(res.body.user).not.toHaveProperty('twoFactorEnabled');
+    const col = await db.pool.query(`SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'two_factor_enabled'`);
+    expect(col.rowCount).toBe(0);
   });
 });
 
