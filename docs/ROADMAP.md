@@ -6,6 +6,11 @@ Source of this table: the `update` branch of the old repo as of 28 Oct 2026, che
 
 ## Decisions taken
 - **Database:** PostgreSQL only. No SQLite.
+- **Categories:** a real table with archive and move (see `BUILD_PLAN.md` D1).
+- **Online order stock:** the shop owns it; stores are told the available quantity (D2).
+- **Backups:** managed database backups plus an encrypted off-site copy (D3).
+- **Ledger:** expenses and stock value post to the ledger (D4).
+- **Sign-in codes (OTP):** dropped; PIN and password lockout stay (D5).
 - **Frontend:** the React app in `frontend/` (bottom-sheet style). The "restyle" components in `DataUI.jsx` are used by 7 pages; keep them there and use `FormUI.jsx`/`Sheet.jsx` for new forms. Dark/light theming is not built.
 
 ## State of each page
