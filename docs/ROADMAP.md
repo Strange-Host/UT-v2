@@ -11,7 +11,7 @@ Source of this table: the `update` branch of the old repo as of 28 Oct 2026, che
 - **Backups:** managed database backups plus an encrypted off-site copy (D3).
 - **Ledger:** expenses and stock value post to the ledger (D4).
 - **Sign-in codes (OTP):** dropped; PIN and password lockout stay (D5).
-- **Frontend:** the React app in `frontend/` (bottom-sheet style). The "restyle" components in `DataUI.jsx` are used by 7 pages; keep them there and use `FormUI.jsx`/`Sheet.jsx` for new forms. Dark/light theming is not built.
+- **Frontend:** the React app in `frontend/` (bottom-sheet style). The "restyle" components in `DataUI.jsx` are used by 5 of 27 pages today. **Decision: restyle every page, and keep the original frontend preserved** (git tag `frontend-original`, parity tests, same behaviour). See `BUILD_PLAN.md`, D7 and "Restyle rules".
 
 ## State of each page
 
@@ -49,3 +49,8 @@ Categories, Expenses, Requisitions, Backups, Notifications, General settings and
 - `frontend/src/pages/Orders.jsx` has one 488-line function (complexity 94). Refactor behind tests before adding to it.
 - Replace the remaining inline copies of the form label/input markup with `FormUI.jsx` as pages are touched (Products, Payments, Expenses, Couriers, Requisitions, Categories).
 - `auth/catalog.ts` and `auth/permissions.ts` import each other (type-only, harmless).
+
+## Added decisions
+- No cutover date: readiness gate instead (`BUILD_PLAN.md`).
+- Weighted average cost for stock value.
+- Online orders for stock the shop lacks are accepted and flagged short, never refused.

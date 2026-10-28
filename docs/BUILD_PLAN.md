@@ -23,8 +23,12 @@ Effort sizes are relative, not days: **S** = a few hours, **M** = about a day, *
 | D3 | **Managed database backups plus an encrypted off-site copy** | 4.4 is settled; details below |
 | D4 | **Expenses and stock value post to the ledger** | 3.1 posts to the ledger, and stock value moves **earlier** to 2.2a, before the POS goes live |
 | D5 | **Sign-in codes (OTP) are dropped.** PIN plus password lockout stay | 4.7 is removed, and 0.6 removes the leftovers |
+| D6 | **There is no cutover date.** The old system keeps running until we are ready | No deadline pressure; cutover is decided by a readiness gate, not a date (see "Cutover gate") |
+| D7 | **Restyle every page, and preserve the original React frontend while doing it** | 7.4 becomes a page-by-page programme with preservation rules (see "Restyle rules") |
+| D8 | **Costing method: weighted average cost** | Specified in 2.2a |
+| D9 | **Online orders for stock the shop lacks are accepted and flagged short** on the Money at risk screen, never refused | Specified in 5.2 |
 
-Still open: **cutover date** and **restyle** (see the end of this file).
+No decisions are open. Assumptions that could still change are listed at the end.
 
 ---
 
@@ -59,7 +63,7 @@ Exit test: log in as each role on a phone and on a laptop, and do that page's no
 |---|---|---|---|
 | 2.1 | **Categories (D1)**: a `categories` table with parent/sub-category, **archive/restore** (hidden from pickers, old products untouched), and **move**: deleting shows what uses the category and moves its products, switched-off products and sub-categories to another category in one transaction. Products get a `category_id` (migrate the current text value). Page: the existing Categories page | Migration, service, routes, adapter, tests for move and archive | M |
 | 2.2 | **Products and Inventory** page (stock list, adjust, receive, write-off, history, low stock) | Server exists; needs 2.1 for category pickers | M |
-| 2.2a | **Stock value and cost of goods in the ledger (D4)**: new accounts `INVENTORY` and `COST_OF_GOODS`; every stock **receipt** posts Dr Inventory / Cr Cash-or-Payable at cost; every **sale, dispatch and refund restock** posts Dr Cost of goods / Cr Inventory at the product's cost; **write-offs and adjustments** post to a loss account; **void and return restock** reverse. Needs a **costing method**: I recommend **weighted average cost** (simple, no batch tracking). The nightly check gains a rule: inventory account balance equals the sum of on-hand × average cost. **Do this before 2.3**, because adding cost of goods after sales exist means re-valuing history | Migration (accounts, cost columns), changes to `stock/stock.ts` and the sale, dispatch, void, refund paths, integrity rule | L |
+| 2.2a | **Stock value and cost of goods in the ledger (D4)**: new accounts `INVENTORY` and `COST_OF_GOODS`; every stock **receipt** posts Dr Inventory / Cr Cash-or-Payable at cost; every **sale, dispatch and refund restock** posts Dr Cost of goods / Cr Inventory at the product's cost; **write-offs and adjustments** post to a loss account; **void and return restock** reverse. **Costing is weighted average (D8).** On every receipt: `new average = (on hand × current average + received qty × unit cost) ÷ (on hand + received qty)`. A sale, dispatch or write-off is costed at the average **at that moment** and the cost is stored on the movement, so history never changes when the average moves later. A void or return restock goes back at the **original sale's cost**, not today's average. The average is kept with more precision than cents (for example 6 decimal places) and each ledger posting is rounded once to whole cents; the rounding difference is allowed for in the nightly rule (tolerance of 1 cent per movement, shown, never hidden). Opening average cost comes from the old system's cost per product in 6.1. The nightly check gains a rule: inventory account balance equals the sum of on-hand × average cost. **Do this before 2.3**, because adding cost of goods after sales exist means re-valuing history | Migration (accounts, cost columns), changes to `stock/stock.ts` and the sale, dispatch, void, refund paths, integrity rule | L |
 | 2.3 | **POS terminal**: products, cart, checkout, discounts with manager approval, void, refund | `/api/sales`, `/api/till/*`; adapter for `salesApi` | L |
 | 2.4 | **Till / Cash sessions** page and the Shift widget (open, close, movements, sign-off) | `/api/till/*` | M |
 | 2.5 | **Offline queue** for sales (`useOfflineQueue`): queued sale sends once, safe to retry | Server already replays by `clientSaleId`; adapter and hook change | M |
@@ -99,7 +103,7 @@ Exit test: one full trading day on a test till, then close-out balances to the c
 | # | Item | Notes | Size |
 |---|---|---|---|
 | 5.1 | **Shopify and WooCommerce product sync** with review queue (staged products, approve/reject, price and name changes re-queued for review). With D2, store **stock counts are no longer imported**; the shop's own count wins | Server pulls **orders** only; products are missing. Uses categories from 2.1 | L |
-| 5.2 | **Stock for online orders (D2): the shop owns it.** A pulled Shopify/WooCommerce order goes through the same path as a shop order: it **reserves** stock when pulled and takes it out at **dispatch**, using the existing reservation rules and locks. Cancelled or refunded online orders release the reservation. **Sub-decision needed:** when an online order arrives for stock the shop does not have, the customer has already paid. Recommended: accept the order anyway, mark it **short**, and show it on the Money at risk screen for a person to resolve (rather than refusing it silently). Requires 5.1 to map each store's product to a local product (by SKU) | L |
+| 5.2 | **Stock for online orders (D2): the shop owns it.** A pulled Shopify/WooCommerce order goes through the same path as a shop order: it **reserves** stock when pulled and takes it out at **dispatch**, using the existing reservation rules and locks. Cancelled or refunded online orders release the reservation. **Short orders (D9):** when an online order arrives for stock the shop does not have, the customer has already paid, so the order is **accepted and flagged short**, never refused. Build: the reservation step records a **shortfall per product** instead of failing with `INSUFFICIENT_STOCK` (only for pulled online orders; shop orders keep the strict rule); the order shows a **Short** badge and appears on **Money at risk** with age, product and quantity short; **dispatch stays blocked** until the stock is there (the database already refuses negative stock); when a receipt arrives, shortfalls are filled **oldest order first** and the order leaves the list; a person can also resolve it by cancelling and refunding through the store. Add a nightly check that every short order has a recorded shortfall. Requires 5.1 to map each store's product to a local product (by SKU) | L |
 | 5.2b | **Push stock levels to the stores (follows from D2).** When the shop owns stock, Shopify/WooCommerce must be told the available quantity (on hand minus reserved) after every change, or they will oversell. A queued, retried job per connected store, with a "last pushed" status and failures shown in notifications. Include a manual "re-sync all" button. Without this item D2 is unsafe to go live | L |
 | 5.3 | **M-Pesa STK push initiation** (callbacks exist; sending the push does not) | Uses `stk_push_requests` and `stk.ts` | M |
 | 5.4 | **Payment disputes** and **owner decision** on a payment (permission key exists, no code) | Adapter methods `openDispute`, `resolveDispute`, `ownerDecision`, `pendingOwnerDecision` | M |
@@ -116,16 +120,36 @@ Exit test: one full trading day on a test till, then close-out balances to the c
 | 6.5 | Production deploy, monitoring, health check alert, backup restore test | See 4.4 | M |
 | 6.6 | Staff training notes and a one-page "what changed" | | S |
 
-## Phase 7: Frontend quality (run alongside, not after)
+## Phase 7: Frontend quality and restyle (run alongside, not after)
 | # | Item | Size |
 |---|---|---|
 | 7.1 | Refactor `Orders.jsx` (one 488-line function, complexity 94) behind the existing e2e tests, **before** adding to it | L |
 | 7.2 | Replace inline label/input markup with `FormUI.jsx` as each page is touched (Products, Payments, Expenses, Couriers, Requisitions, Categories) | S each |
 | 7.3 | Split `ShopifySync`, `POSTerminal`, `Products`, `SettingsMessaging`, `PaymentReconciliation` (all over 200 lines in one function) | M each |
-| 7.4 | Decide on the restyle: finish `DataUI` on all pages, or stop at the 7 done. Do not leave two styles by accident | M |
+| 7.4 | **Restyle every page (D7)** following the "Restyle rules" below. 5 of 27 pages are done (Orders, Couriers, Attendance, Payment reconciliation, Settings > Messaging); 22 remain | M per page |
 | 7.5 | Dark/light theme (not built; about 10–15 components hard-code `bg-ink text-white`) | L, optional |
 | 7.6 | Real phone testing of bottom sheets, keyboard, back gesture, idle lock (never tested on a phone) | S |
 | 7.7 | Remove the `backend`-era wording left in comments and `client.js` | S |
+
+### Restyle rules (D7): the original React frontend is preserved
+The restyle changes **how the app looks, not what it does or how it is built.**
+1. **Tag the starting point.** The git tag `frontend-original` marks the first commit of this repo, the frontend exactly as it was carried over. Any original page can be read with `git show frontend-original:frontend/src/pages/<Page>.jsx`. Never delete or rewrite that tag.
+2. **Same app underneath:** same routes, page names and navigation groups, same component props, same API calls and React Query keys, same wording of labels, buttons, errors and toasts, same keyboard, back-gesture and bottom-sheet behaviour on phones. The restyle uses the existing design tokens (`index.css`) and the shared pieces `DataUI.jsx`, `FormUI.jsx`, `Sheet.jsx`; new look elements are added there, not pasted into pages.
+3. **One page, one commit, separate from wiring.** Wiring a page to the server (Phase 1/2) and restyling it are two commits, so either can be reviewed or reverted alone.
+4. **Prove it is the same.** Each restyled page passes a **parity test**: the original (`frontend-original`) and the restyled page are rendered through the same scripted session with the same mocked API, and must show the same text, controls (by role and label), API calls and toasts at every step. This is the harness used for Leads and Staff in the audit, adjusted to ignore class names. A page does not count as restyled until it passes.
+5. **The POS terminal keeps its large tap targets and glanceable layout** (that was deliberate in the old design). It gets the new typography, colours and spacing tokens only.
+6. **While restyling, replace hard-coded `bg-ink text-white` and similar with tokens.** That makes the optional dark/light theme (7.5) cheap later.
+7. Restyle a page **after** it is wired and tested, and after any split it needs (`Orders.jsx` first: 7.1).
+
+Restyle order (22 pages left), by how often staff see them:
+| Batch | Pages |
+|---|---|
+| R1 shell | Navigation/Layout tokens, Login, Change password |
+| R2 selling | POS terminal (rule 5), Products, Categories, Sales history, Cash sessions, Catalog, Dashboard |
+| R3 people | Staff, Leads, Employees, Payroll, Activity log, Security |
+| R4 money | Payments, Expenses, Requisitions, Finance |
+| R5 settings and sync | Settings, Settings > System, Shopify sync |
+Do each batch right after the same pages are wired, so every page is opened once for wiring and once for restyle.
 
 ---
 
@@ -143,14 +167,19 @@ Exit test: one full trading day on a test till, then close-out balances to the c
 - 5.3 needs the decision in 0.3.
 - 6 needs every module the shop uses on day one. Anything still missing at that point must have a written manual workaround.
 
-## Minimum set to run the shop (the cutover line)
-Phases 0, 1, 2 (including 2.2a), 3.1–3.4, 4.1–4.4, and 6. If online orders are part of day one, add 5.1, 5.2 and 5.2b. Phase 5 and the rest of 3 and 4 can follow after cutover **if** the old system stays readable for the gap (or the work is done by hand meanwhile).
+## Cutover gate (D6: no date, so readiness decides)
+There is no deadline, so the old system keeps running and is changed **only for security fixes** until the gate passes. Cutover happens when **all** of these are true:
+1. Every module the shop uses on a normal day exists on the new server: Phases 0, 1, 2 (including 2.2a), 3.1–3.4, 4.1–4.4. If online orders are part of daily trading, also 5.1, 5.2 and 5.2b.
+2. The data import (6.1–6.3) has been run on a copy of live data **twice**, and you have signed the reconciliation checklist (stock, inventory value, receivables, till float, payroll).
+3. One full trading day has run on a test till with the close-out balancing to the cent and the nightly integrity check passing.
+4. Backups and a trial restore have been done (4.4).
+5. Staff have been shown the new screens (6.6).
+Everything else (the rest of Phases 3, 4, 5, and the restyle) can continue **after** cutover, as long as each missing item has a written manual workaround or the old system stays readable until it is built. Because there is no date, prefer finishing Phase 5 before cutover if online orders matter to you; it costs only time.
 
-## Still open
-1. **Cutover date**: is there a date the old system must stop? That sets what goes below the cutover line. Until you give one, I assume the minimum set above.
-2. **Restyle**: finish the `DataUI` look on every page, or freeze at the 7 pages done? Until you decide, new pages use `FormUI.jsx` and `Sheet.jsx`, and the 7 restyled pages are left alone.
-3. **Costing method** (new, from D4): weighted average cost is recommended. Say if the accountant requires FIFO.
-4. **Short online orders** (new, from D2): accept and flag as short (recommended) or refuse?
+## Assumptions that could still change
+- **Costing:** weighted average is assumed acceptable to whoever does your accounts or tax. Tell me early if they need FIFO, since it changes 2.2a.
+- **Short online orders:** a customer who cannot be served is refunded through the store; the plan does not build refunds from here.
+- **Restyle:** "every page" means the 27 pages in `frontend/src/pages`; no new design language is being invented, only the existing restyle direction (dense tables, monospace micro-labels, accent rule) extended.
 
 ## Known limits of this plan
 - Built from a read of the code and docs. I did not run every legacy page to list its exact behaviours, so a page may hide small features the old backend handled (check each page against `endpoints.js` when you reach it).

@@ -5,7 +5,7 @@ Point of sale, orders, couriers, payments and payroll for Urban Trends. One data
 | Folder | What it is |
 |---|---|
 | `server/` | The API. TypeScript, Express, PostgreSQL. Money rules are enforced **in the database** (balanced ledger, immutable receipts, locked payroll, no negative stock). |
-| `frontend/` | The web app. React 19, Vite, Tailwind, React Query. 29 pages. |
+| `frontend/` | The web app. React 19, Vite, Tailwind, React Query. 27 pages. |
 | `docs/ROADMAP.md` | Where we are, page by page. |
 | `docs/BUILD_PLAN.md` | Everything left to build, in order, with decisions needed. Start here. |
 
