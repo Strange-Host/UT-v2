@@ -8,6 +8,7 @@ Point of sale, orders, couriers, payments and payroll for Urban Trends. One data
 | `frontend/` | The web app. React 19, Vite, Tailwind, React Query. 27 pages. |
 | `docs/ROADMAP.md` | Where we are, page by page. |
 | `docs/BUILD_PLAN.md` | Everything left to build, in order, with decisions needed. Start here. |
+| `docs/ENVIRONMENT.md` | Every environment variable the server and the web app read, and which ones production needs. |
 
 ## Run it
 
