@@ -2,20 +2,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage, takeFlash } from '../api/client';
-import { authApi } from '../api/endpoints';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, verifyOtp } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Step 2 of sign-in, only for accounts with SMS sign-in codes switched on.
-  const [challenge, setChallenge] = useState(null); // { challengeToken, phoneHint }
-  const [code, setCode] = useState('');
-  const [resendNote, setResendNote] = useState('');
   // "Keep me signed in on this device": only for your own phone or computer. Unticked, the sign-in ends when the
   // browser is closed (and sooner if it is left idle). Never tick it on a shared till.
   const [remember, setRemember] = useState(false);
@@ -37,51 +32,13 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const result = await login(email.trim().toLowerCase(), password, remember);
-      if (result.twoFactorRequired) {
-        setChallenge(result);
-        setPassword('');
-        return;
-      }
+      await login(email.trim().toLowerCase(), password, remember);
       navigate('/');
     } catch (err) {
       setError(describe(err, 'Could not sign in. Check your details and try again.'));
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handleVerify(e) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await verifyOtp(challenge.challengeToken, code.trim(), remember);
-      navigate('/');
-    } catch (err) {
-      setError(describe(err, 'That code did not work.'));
-      setCode('');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleResend() {
-    setError('');
-    setResendNote('');
-    try {
-      await authApi.resendOtp(challenge.challengeToken);
-      setResendNote('A new code is on its way.');
-    } catch (err) {
-      setError(describe(err, 'Could not send a new code.'));
-    }
-  }
-
-  function startOver() {
-    setChallenge(null);
-    setCode('');
-    setError('');
-    setResendNote('');
   }
 
   return (
@@ -100,45 +57,6 @@ export default function Login() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8 bg-paper">
-        {challenge ? (
-          <form onSubmit={handleVerify} className="w-full max-w-sm">
-            <h1 className="font-display font-700 text-2xl mb-1">Enter your code</h1>
-            <p className="text-text-muted text-sm mb-8">
-              We sent a 6-digit code to <span className="font-mono text-text">{challenge.phoneHint}</span>. It expires in a few minutes.
-            </p>
-
-            {error && <div className="mb-4 px-3 py-2.5 rounded-lg bg-danger-soft text-danger text-sm">{error}</div>}
-            {resendNote && !error && <div className="mb-4 px-3 py-2.5 rounded-lg bg-success-soft text-success text-sm">{resendNote}</div>}
-
-            <label className="block text-sm font-medium mb-1.5" htmlFor="otp-code">Sign-in code</label>
-            <input
-              id="otp-code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              required
-              autoFocus
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-line bg-surface focus:border-accent outline-none mb-6 font-mono tracking-[0.4em] text-lg text-center"
-              placeholder="······"
-            />
-
-            <button
-              type="submit"
-              disabled={loading || code.length !== 6}
-              className="w-full py-2.5 rounded-lg bg-ink text-white font-medium hover:bg-ink-soft transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Checking…' : 'Verify and sign in'}
-            </button>
-
-            <div className="flex justify-between mt-4 text-sm">
-              <button type="button" onClick={handleResend} className="text-text-muted hover:text-text">Send a new code</button>
-              <button type="button" onClick={startOver} className="text-text-muted hover:text-text">Use a different account</button>
-            </div>
-          </form>
-        ) : (
         <form onSubmit={handleSubmit} className="w-full max-w-sm">
           <h1 className="font-display font-700 text-2xl mb-1">Sign in</h1>
           <p className="text-text-muted text-sm mb-8">Use your Urban Trends staff account.</p>
@@ -199,7 +117,6 @@ export default function Login() {
             </p>
           )}
         </form>
-        )}
       </div>
     </div>
   );

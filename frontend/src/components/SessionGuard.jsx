@@ -89,8 +89,8 @@ export default function SessionGuard() {
 // The password / PIN form, shared by the lock screen and the confirm box.
 // ---------------------------------------------------------------------------------------------------------------------
 function IdentityForm({ user, onSubmit, submitLabel, dark = false, secondary }) {
-  // Only a cashier with a PIN (and no sign-in codes) may unlock with it; everyone else uses their password.
-  const canPin = user.role === 'cashier' && user.has_pin && !user.two_factor_enabled;
+  // Only a cashier with a PIN may unlock with it; everyone else uses their password.
+  const canPin = user.role === 'cashier' && user.has_pin;
   const [mode, setMode] = useState(canPin ? 'pin' : 'password');
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
@@ -187,7 +187,7 @@ function ReauthSheet() {
   return (
     <Sheet onClose={cancelReauth} size="sm" zIndex={120} label="Confirm it's you">
       <h2 className="font-display font-700 text-lg mb-1">Confirm it's you</h2>
-      <p className="text-sm text-text-muted mb-4">This is a sensitive change, so please enter your {user.role === 'cashier' && user.has_pin && !user.two_factor_enabled ? 'PIN or password' : 'password'} again.</p>
+      <p className="text-sm text-text-muted mb-4">This is a sensitive change, so please enter your {user.role === 'cashier' && user.has_pin ? 'PIN or password' : 'password'} again.</p>
       <IdentityForm
         user={user} submitLabel="Confirm" onSubmit={confirmIdentity}
         secondary={<button type="button" onClick={cancelReauth} className="min-h-[44px] text-text-muted underline">Cancel</button>}

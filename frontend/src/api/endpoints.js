@@ -7,13 +7,11 @@ import { newPaymentsApi, newPaymentReconciliationApi, newCustodyApi } from './ad
 
 const legacyAuthApi = {
   login: (email, password, remember = false) => client.post('/auth/login', { email, password, remember }),
-  verifyOtp: (challengeToken, code, remember = false) => client.post('/auth/verify-otp', { challengeToken, code, remember }),
   unlock: (secret) => client.post('/auth/unlock', secret),          // { password } or { pin }
   activity: () => client.post('/auth/activity', {}),
   sessions: () => client.get('/auth/sessions'),
   endSession: (id) => client.delete(`/auth/sessions/${id}`),
   endOtherSessions: () => client.post('/auth/sessions/revoke-others', {}),
-  resendOtp: (challengeToken) => client.post('/auth/resend-otp', { challengeToken }),
   refresh: () => client.post('/auth/refresh'),
   logout: () => client.post('/auth/logout'),
   me: () => client.get('/auth/me'),
@@ -293,7 +291,6 @@ export const leadRoutesApi = {
 export const accessApi = {
   getPermissions: (staffId) => client.get(`/staff/${staffId}/permissions`),
   setPermissions: (staffId, overrides) => client.put(`/staff/${staffId}/permissions`, { overrides }),
-  setTwoFactor: (staffId, enabled) => client.patch(`/staff/${staffId}/two-factor`, { enabled }),
 };
 
 export const systemApi = {

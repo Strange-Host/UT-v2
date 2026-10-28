@@ -784,8 +784,8 @@ const MODULE_CHOICES = [
   {
     key: 'control',
     title: 'Control extras',
-    detail: 'Per-person permission overrides, two-factor sign-in set-up, order disputes, and the "prepay only / watch" customer badges.',
-    offNote: 'While off, permission overrides and two-factor sign-in that were already set keep being enforced; you just cannot change them.',
+    detail: 'Per-person permission overrides, order disputes, and the "prepay only / watch" customer badges.',
+    offNote: 'While off, permission overrides that were already set keep being enforced; you just cannot change them.',
   },
 ];
 

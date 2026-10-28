@@ -14,16 +14,16 @@ afterEach(() => { vi.restoreAllMocks(); clearAccessToken(); });
 describe('the person', () => {
   it('becomes the legacy user the screens read: name, 0/1 flags and the permission keys as a list', () => {
     const u = adaptUser(login.user, login.uiPermissions);
-    expect(u).toMatchObject({ id: login.user.id, name: 'Fixture Manager', email: 'fixture@shop.test', role: 'manager', is_active: 1, must_change_password: 0, two_factor_enabled: 0, has_pin: false });
+    expect(u).toMatchObject({ id: login.user.id, name: 'Fixture Manager', email: 'fixture@shop.test', role: 'manager', is_active: 1, must_change_password: 0, has_pin: false });
     expect(u.permissions).toContain('reports.view');
     expect(u.permissions).not.toContain('payroll.approve'); // not a delegable key
     expect(u).not.toHaveProperty('displayName');
     expect(JSON.stringify(u)).not.toMatch(/password_hash|pin_hash|scrypt/i);
   });
   it('carries the flags the lock screen decides on', () => {
-    const base = { ...login.user, role: 'cashier', hasPin: true, twoFactorEnabled: false, mustChangePassword: true };
-    expect(adaptUser(base, [])).toMatchObject({ has_pin: true, two_factor_enabled: 0, must_change_password: 1 });
-    expect(adaptUser({ ...base, twoFactorEnabled: true }, []).two_factor_enabled).toBe(1);
+    const base = { ...login.user, role: 'cashier', hasPin: true, mustChangePassword: true };
+    expect(adaptUser(base, [])).toMatchObject({ has_pin: true, must_change_password: 1 });
+    expect(adaptUser(base, [])).not.toHaveProperty('two_factor_enabled'); // sign-in codes were dropped (D5)
   });
 });
 
@@ -80,9 +80,9 @@ describe('the auth calls', () => {
     expect(getErrorMessage({ response: { data: wrong } })).toBe('Wrong username or password.');
     expect(wrong.error.code).toBe('BAD_CREDENTIALS');
   });
-  it('says plainly that sign-in codes are not on the new server yet', async () => {
-    const err = await newAuthApi.verifyOtp().catch((e) => e);
-    expect(getErrorMessage(err)).toMatch(/not available on the new server/);
+  it('has no sign-in code calls left (D5)', () => {
+    expect(newAuthApi).not.toHaveProperty('verifyOtp');
+    expect(newAuthApi).not.toHaveProperty('resendOtp');
   });
 });
 

@@ -68,24 +68,13 @@ export function AuthProvider({ children }) {
     settle(reauthWaiters, false, err);
   }, []);
 
-  // Returns the signed-in user, OR — for an account with SMS sign-in codes on —
-  // { twoFactorRequired: true, challengeToken, phoneHint } and NO session yet.
-  // The caller then collects the code and calls verifyOtp().
+  // Returns the signed-in user.
   // `remember`: the "keep me signed in on this device" box (personal phones; never a shared till).
   const login = useCallback(async (email, password, remember = false) => {
     const { data } = await authApi.login(email, password, remember);
-    if (data.twoFactorRequired) return data;
     // The refresh token is no longer here — it arrived as an httpOnly
     // Set-Cookie header the browser already stored; there's nothing for
     // JS to read or save for it.
-    setAccessToken(data.token);
-    setUser(data.user);
-    adoptSession(data.session);
-    return data.user;
-  }, [adoptSession]);
-
-  const verifyOtp = useCallback(async (challengeToken, code, remember = false) => {
-    const { data } = await authApi.verifyOtp(challengeToken, code, remember);
     setAccessToken(data.token);
     setUser(data.user);
     adoptSession(data.session);
@@ -162,7 +151,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, session, locked, reauthOpen, initializing, login, verifyOtp, logout, hasRole, can, setCurrentUser,
+      user, session, locked, reauthOpen, initializing, login, logout, hasRole, can, setCurrentUser,
       lock, confirmIdentity, cancelReauth,
     }}>
       {children}

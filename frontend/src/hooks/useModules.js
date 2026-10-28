@@ -5,7 +5,7 @@ import { USE_NEW_SERVER } from '../api/newServer';
 
 // Which optional parts of the system are switched on (Settings > Business > Optional modules):
 //   hr       HR & back office - Attendance, Payroll, Onboarding, Requisitions
-//   control  control extras   - permission overrides, two-factor set-up, order disputes, risk badges
+//   control  control extras   - permission overrides, order disputes, risk badges
 // On the legacy server both are off until an admin turns them on, and `loaded` is false until the answer arrives, so a page that
 // depends on a module can wait instead of flashing the wrong thing.
 // The new server has no switches: everything is always on, and there is nothing to ask.

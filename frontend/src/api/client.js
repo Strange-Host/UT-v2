@@ -93,7 +93,7 @@ client.interceptors.response.use(
     const originalRequest = err.config;
     const status = err.response?.status;
     const url = originalRequest?.url || '';
-    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/refresh') || url.includes('/auth/unlock') || url.includes('/auth/verify-otp') || url.includes('/auth/pin-login') || url.includes('/auth/change-password');
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/refresh') || url.includes('/auth/unlock') || url.includes('/auth/pin-login') || url.includes('/auth/change-password');
     const code = errorCode(err);
 
     // The screen is locked (idle too long): hold this request until the password/PIN unlocks it, then repeat it.

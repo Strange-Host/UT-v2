@@ -7,7 +7,7 @@ import { authApi } from '../api/endpoints';
 
 vi.mock('../api/endpoints', () => ({
   authApi: {
-    login: vi.fn(), verifyOtp: vi.fn(), unlock: vi.fn(), activity: vi.fn(), logout: vi.fn(),
+    login: vi.fn(), unlock: vi.fn(), activity: vi.fn(), logout: vi.fn(),
   },
 }));
 
@@ -17,7 +17,7 @@ const session = (extra = {}) => ({
   expiresAt: new Date(NOW.getTime() + 12 * 3600e3).toISOString(), lastActivityAt: NOW.toISOString(), idleSeconds: 0, ...extra,
 });
 const manager = { id: 2, name: 'Mary Manager', role: 'manager', has_pin: false, permissions: [] };
-const cashier = { id: 3, name: 'Carl Cashier', role: 'cashier', has_pin: true, two_factor_enabled: 0, permissions: [] };
+const cashier = { id: 3, name: 'Carl Cashier', role: 'cashier', has_pin: true, permissions: [] };
 
 let auth;
 function Probe() {

@@ -22,9 +22,6 @@ export default function StaffAccessModal({ staff, isSelf, onClose }) {
   const queryClient = useQueryClient();
   const [choices, setChoices] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [twoFactor, setTwoFactor] = useState(staff.two_factor_enabled === 1);
-  const [tfBusy, setTfBusy] = useState(false);
-  const [tfError, setTfError] = useState('');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['staff-permissions', staff.id],
@@ -56,21 +53,6 @@ export default function StaffAccessModal({ staff, isSelf, onClose }) {
     }
   }
 
-  async function toggleTwoFactor() {
-    setTfBusy(true);
-    setTfError('');
-    try {
-      await accessApi.setTwoFactor(staff.id, !twoFactor);
-      setTwoFactor(!twoFactor);
-      queryClient.invalidateQueries({ queryKey: ['staff'] });
-      toast.success(!twoFactor ? 'Sign-in codes turned on.' : 'Sign-in codes turned off.');
-    } catch (err) {
-      setTfError(getErrorMessage(err, 'Could not change sign-in codes.'));
-    } finally {
-      setTfBusy(false);
-    }
-  }
-
   const groups = data ? [...new Set(data.permissions.map((p) => p.group))] : [];
 
   return (
@@ -81,23 +63,6 @@ export default function StaffAccessModal({ staff, isSelf, onClose }) {
         </div>
 
         <div className="px-6 overflow-y-auto flex-1">
-          <div className="border border-line rounded-lg p-4 mb-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-sm font-medium">Sign-in code by SMS</div>
-                <p className="text-xs text-text-muted mt-1">
-                  After the password, a 6-digit code is texted to {staff.phone || 'their phone'}. Turns off the PIN shortcut for this account.
-                  If the SMS provider is ever down, run <span className="font-mono">npm run disable-2fa -- {staff.email}</span> on the server.
-                </p>
-              </div>
-              <button type="button" onClick={toggleTwoFactor} disabled={tfBusy} role="switch" aria-checked={twoFactor}
-                className={`shrink-0 w-11 h-6 rounded-full relative transition-colors disabled:opacity-50 ${twoFactor ? 'bg-success' : 'bg-line'}`}>
-                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${twoFactor ? 'left-[22px]' : 'left-0.5'}`} />
-              </button>
-            </div>
-            {tfError && <div className="mt-3 px-3 py-2 rounded-lg bg-danger-soft text-danger text-xs">{tfError}</div>}
-          </div>
-
           <div className="text-sm font-medium mb-1">Permissions</div>
           {isLoading && <div className="text-sm text-text-muted py-4">Loading…</div>}
           {error && <div className="px-3 py-2 rounded-lg bg-danger-soft text-danger text-sm">{getErrorMessage(error, 'Could not load permissions.')}</div>}

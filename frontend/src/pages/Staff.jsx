@@ -281,7 +281,7 @@ function StaffActionsSheet({
       <p className="text-sm text-text-muted mb-3 capitalize">{s.erased ? 'Erased account' : `${s.role} · ${s.status}`}</p>
       <div className="space-y-2 mb-4">
         {s.locked && act('Unlock account', 'They were locked out after wrong passwords or PINs.', () => onUnlock(s))}
-        {!s.erased && s.status === 'active' && canManageAccess && act('Access & permissions', 'What they can see and do, and sign-in codes.', () => onAccess(s))}
+        {!s.erased && s.status === 'active' && canManageAccess && act('Access & permissions', 'What they can see and do.', () => onAccess(s))}
         {!s.erased && s.status === 'active' && act('Reset password', 'Create a temporary password they must change.', () => onResetPassword(s))}
         {!s.erased && act('Sign out of all devices', 'Ends every sign-in this person has right now.', () => onSignOutEverywhere(s))}
         {!s.erased && s.status === 'inactive' && act('Reactivate', 'Let them sign in again.', () => onReactivate(s))}

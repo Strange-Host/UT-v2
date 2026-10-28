@@ -12,7 +12,6 @@ export function adaptUser(user, uiPermissions = []) {
     role: user.role,
     is_active: user.active ? 1 : 0,
     must_change_password: user.mustChangePassword ? 1 : 0,
-    two_factor_enabled: user.twoFactorEnabled ? 1 : 0,
     has_pin: Boolean(user.hasPin),
     last_login_at: user.lastLoginAt ?? null,
     created_at: user.createdAt ?? null,

@@ -148,7 +148,7 @@ Code in `src/auth/`, `src/routes/`, `src/http.ts`; tables in `migrations/0007_us
 
 **Endpoints so far.** `/api/auth/*`, `/api/users` (admin), and the payroll run endpoints `GET/POST /api/payroll/runs`, `GET /api/payroll/runs/:id`, `POST .../approve`, `POST .../pay`, which prove the pattern: view is `payroll.view`, generating a draft is `payroll.manage`, approve and pay are admin only. Requests are validated with zod (a bad one is a 422 naming the fields). Every other phase 3 to 6 function still needs its endpoints; each is a few lines on this pattern and arrives with its screen.
 
-**Not in this step:** a login screen (the old frontend talks to the old backend), IP-based rate limiting (add `trust proxy` and a limiter when the public address is settled), SMS two-factor, per-user permission overrides.
+**Not in this step:** a login screen (the old frontend talks to the old backend), IP-based rate limiting (add `trust proxy` and a limiter when the public address is settled), per-user permission overrides.
 
 ## Master data: products, stock, customers, leads (step 2 of the build-out)
 
