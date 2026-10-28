@@ -1,0 +1,9 @@
+# Secrets and runtime data - never commit these.
+.env
+.env.*
+!.env.example
+*.bak
+data/
+logs/
+node_modules/
+dist/
