@@ -1,3 +1,4 @@
+import '../loadEnv.js';
 import { parseArgs } from 'node:util';
 import { loadConfig } from '../config.js';
 import { createPool, waitForDatabase } from '../db/pool.js';

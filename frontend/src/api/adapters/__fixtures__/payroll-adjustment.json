@@ -1,0 +1,10 @@
+{
+  "adjustment": {
+    "id": 2,
+    "staffKey": "pay.fixture",
+    "type": "loss_deduction",
+    "amountCents": 50000,
+    "effectiveDate": "2026-10-04",
+    "reason": "Till shortfall"
+  }
+}

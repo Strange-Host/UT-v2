@@ -1,3 +1,4 @@
+import '../loadEnv.js';
 import { loadConfig } from '../config.js';
 import { createLogger } from '../logger.js';
 import { createPool, waitForDatabase } from './pool.js';

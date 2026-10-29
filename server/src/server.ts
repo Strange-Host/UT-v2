@@ -1,3 +1,4 @@
+import './loadEnv.js';
 import { createApp } from './app.js';
 import { loadConfig } from './config.js';
 import { createPool } from './db/pool.js';

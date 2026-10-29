@@ -1,0 +1,255 @@
+{
+  "events": [
+    {
+      "id": 43,
+      "at": "2026-10-29T00:12:36.552Z",
+      "severity": "urgent",
+      "action": "account_locked",
+      "actor": "admin5xxxu7",
+      "title": "admin5xxxu7 was locked out",
+      "detail": "Too many wrong passwords.",
+      "ip": null
+    },
+    {
+      "id": 42,
+      "at": "2026-10-29T00:12:36.510Z",
+      "severity": "warning",
+      "action": "login_failed",
+      "actor": "admin5xxxu7",
+      "title": "Wrong password for admin5xxxu7",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 41,
+      "at": "2026-10-29T00:12:36.475Z",
+      "severity": "warning",
+      "action": "login_failed",
+      "actor": "admin5xxxu7",
+      "title": "Wrong password for admin5xxxu7",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 40,
+      "at": "2026-10-29T00:12:36.437Z",
+      "severity": "warning",
+      "action": "login_failed",
+      "actor": "admin5xxxu7",
+      "title": "Wrong password for admin5xxxu7",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 39,
+      "at": "2026-10-29T00:12:36.401Z",
+      "severity": "warning",
+      "action": "login_failed",
+      "actor": "admin5xxxu7",
+      "title": "Wrong password for admin5xxxu7",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 38,
+      "at": "2026-10-29T00:12:36.366Z",
+      "severity": "info",
+      "action": "signed_out_other_devices",
+      "actor": "admin5xxxu7",
+      "title": "admin5xxxu7 signed out their other devices",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 37,
+      "at": "2026-10-29T00:12:36.354Z",
+      "severity": "warning",
+      "action": "security_policy_changed",
+      "actor": "admin5xxxu7",
+      "title": "The sign-in rules were changed",
+      "detail": "By admin5xxxu7.",
+      "ip": null
+    },
+    {
+      "id": 34,
+      "at": "2026-10-29T00:12:36.272Z",
+      "severity": "info",
+      "action": "password_changed",
+      "actor": "admin5xxxu7",
+      "title": "admin5xxxu7 changed their password",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 32,
+      "at": "2026-10-29T00:12:36.162Z",
+      "severity": "info",
+      "action": "user_created",
+      "actor": "test-setup",
+      "title": "Account created for admin5xxxu7",
+      "detail": "A admin account, by test-setup.",
+      "ip": null
+    },
+    {
+      "id": 23,
+      "at": "2026-10-29T00:12:36.039Z",
+      "severity": "info",
+      "action": "password_changed",
+      "actor": "manager4xs4f5",
+      "title": "manager4xs4f5 changed their password",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 21,
+      "at": "2026-10-29T00:12:35.932Z",
+      "severity": "info",
+      "action": "user_created",
+      "actor": "test-setup",
+      "title": "Account created for manager4xs4f5",
+      "detail": "A manager account, by test-setup.",
+      "ip": null
+    },
+    {
+      "id": 20,
+      "at": "2026-10-29T00:12:35.884Z",
+      "severity": "warning",
+      "action": "permissions_changed",
+      "actor": "admin3xpz4w",
+      "title": "Access changed for fixture.cashier",
+      "detail": "By admin3xpz4w.",
+      "ip": null
+    },
+    {
+      "id": 19,
+      "at": "2026-10-29T00:12:35.837Z",
+      "severity": "info",
+      "action": "signed_out_everywhere",
+      "actor": "admin3xpz4w",
+      "title": "fixture.cashier was signed out of every device",
+      "detail": "By admin3xpz4w.",
+      "ip": null
+    },
+    {
+      "id": 18,
+      "at": "2026-10-29T00:12:35.825Z",
+      "severity": "info",
+      "action": "account_unlocked",
+      "actor": "admin3xpz4w",
+      "title": "fixture.cashier was unlocked",
+      "detail": "By admin3xpz4w.",
+      "ip": null
+    },
+    {
+      "id": 17,
+      "at": "2026-10-29T00:12:35.820Z",
+      "severity": "warning",
+      "action": "password_reset",
+      "actor": "admin3xpz4w",
+      "title": "Password reset for fixture.cashier",
+      "detail": "By admin3xpz4w.",
+      "ip": null
+    },
+    {
+      "id": 16,
+      "at": "2026-10-29T00:12:35.778Z",
+      "severity": "info",
+      "action": "user_created",
+      "actor": "admin3xpz4w",
+      "title": "Account created for fixture.cashier",
+      "detail": "A cashier account, by admin3xpz4w.",
+      "ip": null
+    },
+    {
+      "id": 15,
+      "at": "2026-10-29T00:12:35.711Z",
+      "severity": "info",
+      "action": "password_changed",
+      "actor": "admin3xpz4w",
+      "title": "admin3xpz4w changed their password",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 13,
+      "at": "2026-10-29T00:12:35.601Z",
+      "severity": "info",
+      "action": "user_created",
+      "actor": "test-setup",
+      "title": "Account created for admin3xpz4w",
+      "detail": "A admin account, by test-setup.",
+      "ip": null
+    },
+    {
+      "id": 12,
+      "at": "2026-10-29T00:12:35.470Z",
+      "severity": "info",
+      "action": "password_changed",
+      "actor": "manager2xu8bs",
+      "title": "manager2xu8bs changed their password",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 10,
+      "at": "2026-10-29T00:12:35.362Z",
+      "severity": "info",
+      "action": "user_created",
+      "actor": "test-setup",
+      "title": "Account created for manager2xu8bs",
+      "detail": "A manager account, by test-setup.",
+      "ip": null
+    },
+    {
+      "id": 8,
+      "at": "2026-10-29T00:12:35.161Z",
+      "severity": "info",
+      "action": "password_changed",
+      "actor": "manager1xdhff",
+      "title": "manager1xdhff changed their password",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 6,
+      "at": "2026-10-29T00:12:35.054Z",
+      "severity": "info",
+      "action": "user_created",
+      "actor": "test-setup",
+      "title": "Account created for manager1xdhff",
+      "detail": "A manager account, by test-setup.",
+      "ip": null
+    },
+    {
+      "id": 5,
+      "at": "2026-10-29T00:12:35.009Z",
+      "severity": "warning",
+      "action": "login_failed",
+      "actor": "fixture.manager",
+      "title": "Wrong password for fixture.manager",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 3,
+      "at": "2026-10-29T00:12:34.832Z",
+      "severity": "info",
+      "action": "password_changed",
+      "actor": "fixture.manager",
+      "title": "fixture.manager changed their password",
+      "detail": null,
+      "ip": null
+    },
+    {
+      "id": 1,
+      "at": "2026-10-29T00:12:34.680Z",
+      "severity": "info",
+      "action": "user_created",
+      "actor": "test-setup",
+      "title": "Account created for fixture.manager",
+      "detail": "A manager account, by test-setup.",
+      "ip": null
+    }
+  ],
+  "total": 25
+}

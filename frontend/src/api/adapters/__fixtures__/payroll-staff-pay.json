@@ -1,0 +1,77 @@
+{
+  "source": "live",
+  "item": {
+    "staffKey": "pay.fixture",
+    "daysWorked": 1,
+    "retainerCents": 100000,
+    "unitsSold": 0,
+    "achievedSalesCents": 0,
+    "targetCents": 10000000,
+    "achievementBp": 0,
+    "tier": "<70%",
+    "rateCents": 5000,
+    "commissionCents": 0,
+    "bonusesCents": 30000,
+    "lateCents": 20000,
+    "absenceCents": 100000,
+    "missingHoursCents": 15000,
+    "advancesCents": 200000,
+    "lossDeductionsCents": 50000,
+    "grossCents": 130000,
+    "deductionsCents": 385000,
+    "netCents": -255000,
+    "payableCents": 0,
+    "shortfallCents": 255000,
+    "lines": [
+      {
+        "kind": "retainer_day",
+        "refDate": "2026-10-02",
+        "refText": null,
+        "quantity": null,
+        "amountCents": 100000
+      },
+      {
+        "kind": "salary_advance",
+        "refDate": "2026-10-04",
+        "refText": "Advance",
+        "quantity": null,
+        "amountCents": 200000
+      },
+      {
+        "kind": "loss_deduction",
+        "refDate": "2026-10-04",
+        "refText": "Till shortfall",
+        "quantity": null,
+        "amountCents": 50000
+      },
+      {
+        "kind": "bonus",
+        "refDate": "2026-10-04",
+        "refText": "Good month",
+        "quantity": null,
+        "amountCents": 30000
+      },
+      {
+        "kind": "late",
+        "refDate": "2026-10-02",
+        "refText": null,
+        "quantity": 2,
+        "amountCents": 20000
+      },
+      {
+        "kind": "missing_hours",
+        "refDate": "2026-10-02",
+        "refText": null,
+        "quantity": 3,
+        "amountCents": 15000
+      },
+      {
+        "kind": "absence",
+        "refDate": "2026-10-03",
+        "refText": "No call, no show",
+        "quantity": null,
+        "amountCents": 100000
+      }
+    ]
+  }
+}

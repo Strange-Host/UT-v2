@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-29",
+  "staff": [
+    {
+      "userId": 9,
+      "staffKey": "absent.fixture",
+      "name": "Absent Fixture",
+      "role": "cashier",
+      "clockInAt": null,
+      "clockOutAt": null,
+      "absenceReason": "Sick, called in"
+    },
+    {
+      "userId": 5,
+      "staffKey": "fixture.cashier",
+      "name": "Fixture Cashier",
+      "role": "cashier",
+      "clockInAt": null,
+      "clockOutAt": null,
+      "absenceReason": null
+    },
+    {
+      "userId": 1,
+      "staffKey": "fixture.manager",
+      "name": "Fixture Manager",
+      "role": "manager",
+      "clockInAt": null,
+      "clockOutAt": null,
+      "absenceReason": null
+    },
+    {
+      "userId": 4,
+      "staffKey": "admin3xfiiw",
+      "name": "Test admin",
+      "role": "admin",
+      "clockInAt": null,
+      "clockOutAt": null,
+      "absenceReason": null
+    },
+    {
+      "userId": 7,
+      "staffKey": "admin5xj49n",
+      "name": "Test admin",
+      "role": "admin",
+      "clockInAt": null,
+      "clockOutAt": null,
+      "absenceReason": null
+    },
+    {
+      "userId": 2,
+      "staffKey": "manager1xgcrj",
+      "name": "Test manager",
+      "role": "manager",
+      "clockInAt": null,
+      "clockOutAt": null,
+      "absenceReason": null
+    },
+    {
+      "userId": 3,
+      "staffKey": "manager2x0bcu",
+      "name": "Test manager",
+      "role": "manager",
+      "clockInAt": null,
+      "clockOutAt": null,
+      "absenceReason": null
+    },
+    {
+      "userId": 6,
+      "staffKey": "manager4xa1ur",
+      "name": "Test manager",
+      "role": "manager",
+      "clockInAt": null,
+      "clockOutAt": null,
+      "absenceReason": null
+    },
+    {
+      "userId": 8,
+      "staffKey": "manager6xoq7a",
+      "name": "Test manager",
+      "role": "manager",
+      "clockInAt": "2026-10-29T06:05:57.525Z",
+      "clockOutAt": null,
+      "absenceReason": null
+    }
+  ]
+}

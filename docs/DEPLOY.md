@@ -44,15 +44,24 @@ Generate a key: `node -e "console.log(require('crypto').randomBytes(48).toString
 
 **Save `ORDER_REF_KEY` and `SECRETS_KEY` somewhere outside Railway as well** (a password manager). A database restore without them leaves order references and stored credentials unreadable. This is the "encrypted off-site copy" side of plan item 4.4.
 
-**Possible first-build failure** *(check)*: if `NODE_ENV=production` is also visible during the build, `npm ci` may skip dev dependencies and `tsc` will not be found. If the build fails with `tsc: not found`, make the build install dev dependencies (for example `npm ci --include=dev`) or set `NODE_ENV` for runtime only.
+**Possible first-build failure** *(check)*: if `NODE_ENV=production` is also visible during the build, `npm ci` may skip dev dependencies and `tsc` will not be found. If the build fails with `tsc: not found`, make the build install dev dependencies (for example `npm ci --include=dev`) or set `NODE_ENV` for runtime only. The build commands above already use `--include=dev` for the staff app; use `npm ci --include=dev && npm run build` for the API too if it happens.
 
 ## 3. Staff app (React)
-Variables are read **when the app is built**, not when it runs:
-- `VITE_NEW_API_URL` = the full API address including `/api`, e.g. `https://api.yourshop.co.ke/api`. Without it the app guesses the page's own host on port 3000, which is wrong in production.
-- Build: `npm ci && npm run build`. Publish `frontend/dist`.
-- The app uses client-side routes (`BrowserRouter`), so the static host must send every unknown path to `index.html`. Without that, reloading any page other than `/` shows "not found".
+A second Railway service from the same repo. Settings *(check labels in the dashboard)*:
+- Root directory: `frontend`
+- Build command: `npm ci --include=dev && npm run build`
+- Start command: `npm start` (serves `frontend/dist` and sends every unknown path to `index.html`, so reloading `/orders` works)
 
-No Railway config for this service exists in the repo yet. If you want it on Railway rather than a static host, say so and I will add one.
+Variables are read **when the app is built**, not when it runs, so set them before the first deploy and redeploy after changing them:
+- `VITE_NEW_API_URL` = the full API address including `/api`, e.g. `https://api.yourshop.co.ke/api`. Without it the app guesses the page's own host on port 3000, which is wrong in production.
+
+Then put this service's public address into the API's `CORS_ORIGINS` and redeploy the API.
+
+Checked locally (production build served by `npm start`, API in production mode, real browser): sign-in, forced first password change, staying signed in after a reload, Orders. Not checked: Railway itself.
+
+**Sign-in box:** it accepts an email **or a username**. The first admin made with `create-admin` has a username and no email, so a strict email field would have refused it.
+
+If you would rather host `frontend/dist` on any static host, the same build command and the `VITE_NEW_API_URL` variable apply; the host must send unknown paths to `index.html`.
 
 ## Cookies and addresses (the usual reason sign-in "does not stick")
 The refresh token is a cookie that the browser only sends if it considers the app and the API to be the same site.

@@ -57,7 +57,8 @@ export default function Login() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8 bg-paper">
-        <form onSubmit={handleSubmit} className="w-full max-w-sm">
+        {/* noValidate: the browser would reject a username like "owner" in the email-type box; the server accepts an email or a username and validates it. */}
+        <form onSubmit={handleSubmit} noValidate className="w-full max-w-sm">
           <h1 className="font-display font-700 text-2xl mb-1">Sign in</h1>
           <p className="text-text-muted text-sm mb-8">Use your Urban Trends staff account.</p>
 
@@ -70,9 +71,10 @@ export default function Login() {
             </div>
           )}
 
-          <label className="block text-sm font-medium mb-1.5">Email</label>
+          <label className="block text-sm font-medium mb-1.5">Email or username</label>
           <input
             type="email"
+            autoComplete="username"
             required
             autoCapitalize="none"
             autoCorrect="off"

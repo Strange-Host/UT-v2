@@ -3,7 +3,7 @@ import { z } from 'zod';
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  DATABASE_URL: z.string({ required_error: 'DATABASE_URL is required. Copy server/.env.example to server/.env and set it, or set it in the environment.' }).min(1, 'DATABASE_URL is required'),
   // Railway's private network needs no TLS; a public connection string does. Opt in explicitly.
   DATABASE_SSL: z.enum(['true', 'false']).default('false'),
   // Scrambles order references. Required only when references are issued (phase 3). NEVER change it once references exist.

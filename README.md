@@ -12,17 +12,28 @@ Point of sale, orders, couriers, payments and payroll for Urban Trends. One data
 
 ## Run it
 
+### Quickest: no database to install
 ```bash
-# 1. API (needs a PostgreSQL database; see server/.env.example)
-cd server && npm ci && cp .env.example .env     # set DATABASE_URL
+cd server && npm ci
+npm run dev:stack        # starts a throwaway PostgreSQL and the API on http://localhost:3000
+```
+It prints sample sign-ins (for example `admin@shop.test` / `Admin-Dev-Passphrase-1`). Data is discarded when you stop it. Then, in a second terminal:
+```bash
+cd frontend && npm ci --include=dev
+npm run dev              # http://localhost:5173
+```
+
+### With your own PostgreSQL
+Install PostgreSQL, create an empty database (`createdb urban_trends`, or use pgAdmin), then:
+```bash
+cd server && npm ci
+cp .env.example .env     # Windows cmd: copy .env.example .env
+# edit .env: set DATABASE_URL=postgres://USER:PASSWORD@localhost:5432/urban_trends
 npm run migrate
 npm run create-admin -- --username you --name "Your Name"   # prints a one-time password
-npm run dev                                      # http://localhost:3000
-
-# 2. Web app
-cd ../frontend && npm ci --include=dev && cp .env.example .env
-npm run dev                                      # http://localhost:5173
+npm run dev                                                 # http://localhost:3000
 ```
+The server reads `server/.env` itself (run the commands from inside `server/`). A variable already set in the environment wins over the file, which is how Railway supplies them.
 
 ## Check it
 
