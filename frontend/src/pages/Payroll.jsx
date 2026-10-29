@@ -26,7 +26,7 @@ export default function Payroll() {
     queryFn: () => fetchAll(staffApi.list, { status: 'active' }),
   });
 
-  const { data: summary, isLoading, refetch } = useQuery({
+  const { data: summary, isLoading, error: summaryError, refetch } = useQuery({
     queryKey: ['payroll', staffId, from, to],
     queryFn: () => payrollApi.summary(staffId, from, to).then((r) => r.data.data),
     enabled: !!staffId && !!from && !!to,
@@ -35,6 +35,7 @@ export default function Payroll() {
   async function handleLossDeduction() {
     const amount = Math.round(parseFloat(lossForm.amount) * 100);
     if (!amount || amount <= 0) { setError('Enter an amount.'); return; }
+    if (!lossForm.notes.trim()) { setError('Say what happened.'); return; }
     setBusy(true);
     setError('');
     try {
@@ -80,6 +81,9 @@ export default function Payroll() {
       )}
 
       {staffId && isLoading && <div className="text-text-muted text-sm">Calculating…</div>}
+      {staffId && summaryError && (
+        <div className="mb-4 px-3.5 py-2.5 rounded-lg bg-danger-soft text-danger text-sm">{getErrorMessage(summaryError, 'Could not calculate this pay summary.')}</div>
+      )}
 
       {summary && (
         <>
@@ -103,6 +107,12 @@ export default function Payroll() {
                 </span>
                 <span>{money(summary.commission.commissionTotal)}</span>
               </div>
+              {(summary.bonuses || []).map((b) => (
+                <div key={b.id} className="flex justify-between">
+                  <span>Bonus{b.notes && <span className="text-text-muted"> · {b.notes}</span>}</span>
+                  <span>{money(b.amount)}</span>
+                </div>
+              ))}
               <div className="flex justify-between font-600 pt-1.5 border-t border-dashed border-line">
                 <span>Gross pay</span><span>{money(summary.grossPay)}</span>
               </div>
@@ -144,6 +154,7 @@ export default function Payroll() {
             <div className="mt-4 pt-3 border-t border-dashed border-line text-xs text-text-muted">
               Sales achievement: {money(summary.commission.achievedSales)} of {money(summary.commission.target)} target
               ({summary.commission.achievementPercent.toFixed(1)}%).
+              {summary.source === 'locked' && ' These are the figures from the locked payroll run for this period.'}
             </div>
           </div>
 
@@ -153,7 +164,7 @@ export default function Payroll() {
               <div className="mt-3 font-mono text-xs space-y-1">
                 {summary.attendanceDeductions.breakdown.map((b, i) => (
                   <div key={i} className="flex justify-between text-text-muted">
-                    <span>{b.date} · {b.type.replace('_', ' ')}{b.hoursLate ? ` (${b.hoursLate}h)` : ''}{b.hoursMissing ? ` (${b.hoursMissing}h)` : ''}</span>
+                    <span>{b.date} · {b.type.replace('_', ' ')}{b.hoursLate ? ` (${b.hoursLate}h)` : ''}{b.hoursMissing ? ` (${b.hoursMissing}h)` : ''}{b.reason ? ` · ${b.reason}` : ''}</span>
                     <span className="text-danger">−{money(b.amount)}</span>
                   </div>
                 ))}

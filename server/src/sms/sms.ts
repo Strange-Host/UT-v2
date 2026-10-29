@@ -1,3 +1,4 @@
+import { setSettings } from '../auth/settings.js';
 import { getSecret, putSecret } from '../integrations/secrets.js';
 import { raiseAlert } from '../alerts/alerts.js';
 import type { Pool } from '../db/pool.js';
@@ -245,4 +246,25 @@ export async function sendNow(ctx: SmsCtx, to: string, message: string): Promise
   if (!creds) return { ok: false, error: 'SMS is not configured' };
   const r = await sendSms(ctx.fetch ?? fetch, creds, msisdn, message, ctx.sendUrl ?? DEFAULT_SEND_URL);
   return { ok: r.ok, error: r.error ?? null };
+}
+
+// ---- the options an administrator sets: what is sent, how it is worded, how customers pay --------------------------------------------
+export const SMS_OPTION_KEYS = ['sms_enabled', 'sms_send_order_received', 'sms_send_payment_received', 'sms_message_type', 'sms_delivery_promise', 'sms_catalog_url', 'paybill_number', 'kcb_account_prefix'] as const;
+export type SmsOptionKey = (typeof SMS_OPTION_KEYS)[number];
+export type SmsOptions = Record<SmsOptionKey, string>;
+
+/** The options under their legacy key names ('1'/'0' for switches), with the defaults where nothing is saved yet. */
+export async function getSmsOptions(db: Queryable): Promise<SmsOptions> {
+  const s = await smsSettings(db);
+  return Object.fromEntries(SMS_OPTION_KEYS.map((k) => [k, s[k]])) as SmsOptions;
+}
+
+/** Saves only the keys given, and says which changed (before, after) so the audit trail can show what an administrator did. */
+export async function saveSmsOptions(pool: Pool, input: Partial<SmsOptions>, actor: string): Promise<{ options: SmsOptions; changed: Record<string, [string, string]> }> {
+  return withTransaction(pool, async (c) => {
+    const before = await getSmsOptions(c);
+    const entries = Object.fromEntries(Object.entries(input).filter(([k, v]) => v !== undefined && before[k as SmsOptionKey] !== v)) as Record<string, string>;
+    if (Object.keys(entries).length > 0) await setSettings(c, entries, actor);
+    return { options: { ...before, ...entries }, changed: Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, [before[k as SmsOptionKey], v] as [string, string]])) };
+  });
 }

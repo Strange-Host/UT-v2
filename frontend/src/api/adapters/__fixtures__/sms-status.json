@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "credentials": {
+    "configured": true,
+    "source": "database",
+    "hasUserId": true,
+    "hasPassword": true,
+    "senderId": "URBAN"
+  },
+  "last7Days": {
+    "queued": 1,
+    "failed": 1
+  }
+}

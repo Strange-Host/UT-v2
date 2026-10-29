@@ -5,11 +5,17 @@ import type { Pool } from '../db/pool.js';
 import { HttpError } from '../errors.js';
 import { handler } from '../http.js';
 import { audit } from '../pos/audit.js';
-import { getSafeCredentials, listOutbox, removeCredentials, retryMessage, saveCredentials, sendTest, smsStatus, type SmsCtx } from '../sms/sms.js';
+import { getSafeCredentials, getSmsOptions, listOutbox, removeCredentials, retryMessage, saveCredentials, saveSmsOptions, sendTest, smsStatus, type SmsCtx } from '../sms/sms.js';
 
 const adminOnly: RequestHandler = (req, _res, next) => (req.user?.role === 'admin' ? next() : next(new HttpError(403, 'FORBIDDEN', 'Only an administrator can do this.')));
 
 const credentialsBody = z.object({ userId: z.string().trim().min(1).max(100).optional(), password: z.string().min(1).max(200).optional(), senderId: z.string().trim().max(20).optional() }).strict();
+const flag = z.enum(['0', '1']);
+const optionsBody = z.object({
+  sms_enabled: flag, sms_send_order_received: flag, sms_send_payment_received: flag, sms_message_type: z.enum(['unicode', 'text']),
+  sms_delivery_promise: z.string().trim().max(300), sms_catalog_url: z.string().trim().max(300).regex(/^(https?:\/\/\S+)?$/, 'must start with http:// or https://'),
+  paybill_number: z.string().trim().regex(/^([0-9]{5,10})?$/, 'must be 5 to 10 digits'), kcb_account_prefix: z.string().trim().regex(/^[A-Za-z0-9_-]{0,20}$/, 'may use letters, digits, - and _ (up to 20)'),
+}).partial().strict();
 const testBody = z.object({ to: z.string().trim().min(1).max(30) }).strict();
 const parse = <T>(schema: z.ZodType<T>, body: unknown): T => {
   const r = schema.safeParse(body ?? {});
@@ -39,6 +45,15 @@ export function smsRouter(pool: Pool, ctx: Omit<SmsCtx, 'pool'>): Router {
     const out = await retryMessage(pool, id);
     await audit(pool, { actor: req.user!.username, role: req.user!.role, action: 'sms_retried', entityType: 'sms_outbox', entityId: id });
     res.json(out);
+  }));
+
+  // What is sent and how customers are told to pay. Seeing it is for anyone who can see the messages; changing it is for administrators.
+  r.get('/settings', requirePermission('sms.view'), handler(async (_req, res) => { res.json({ settings: await getSmsOptions(pool) }); }));
+
+  r.put('/settings', adminOnly, requireRecentAuth(), handler(async (req, res) => {
+    const { options, changed } = await saveSmsOptions(pool, parse(optionsBody, req.body), req.user!.username);
+    if (Object.keys(changed).length > 0) await audit(pool, { actor: req.user!.username, role: req.user!.role, action: 'sms_settings_changed', entityType: 'settings', risk: 1, details: { changed } });
+    res.json({ settings: options });
   }));
 
   // Credentials: flags only, never the values.

@@ -7,6 +7,10 @@ import { newPaymentsApi, newPaymentReconciliationApi, newCustodyApi } from './ad
 import { newStaffApi, newAccessApi } from './adapters/staff';
 import { newLeadsApi } from './adapters/leads';
 import { newSecurityApi } from './adapters/security';
+import { newPayrollApi } from './adapters/payroll';
+import { newSmsApi, newSettingsApi } from './adapters/sms';
+import { notImplemented } from './adapters/common';
+import { newAttendanceApi, newTelesalesApi, newShiftApi } from './adapters/attendance';
 import { newProductsApi } from './adapters/products';
 
 const legacyAuthApi = {
@@ -62,10 +66,11 @@ export const modulesApi = {
   update: (data) => client.put('/modules', data),
 };
 
-export const settingsApi = {
+const legacySettingsApi = {
   get: () => client.get('/settings'),
   update: (data) => client.put('/settings', data),
 };
+export const settingsApi = USE_NEW_SERVER ? newSettingsApi : legacySettingsApi;
 
 export const backupsApi = {
   list: () => client.get('/backups'),
@@ -83,7 +88,7 @@ export const paymentGatewaysApi = {
   simulateMpesaPayment: (data) => client.post('/settings/payment-gateways/mpesa/simulate', data),
 };
 
-export const smsApi = {
+const legacySmsApi = {
   status: () => client.get('/sms/status'),
   getCredentials: () => client.get('/sms/credentials'),
   saveCredentials: (data) => client.put('/sms/credentials', data),
@@ -92,6 +97,7 @@ export const smsApi = {
   outbox: (params) => client.get('/sms/outbox', { params }),
   retry: (id) => client.post(`/sms/outbox/${id}/retry`),
 };
+export const smsApi = USE_NEW_SERVER ? newSmsApi : legacySmsApi;
 
 export const notificationsApi = {
   list: (params) => client.get('/notifications', { params }),
@@ -241,17 +247,19 @@ const legacyPaymentReconciliationApi = {
   ignore: (id, notes) => client.post(`/payment-reconciliation/${id}/ignore`, { notes }),
 };
 
-export const attendanceApi = {
+const legacyAttendanceApi = {
   clockIn: () => client.post('/attendance/clock-in'),
   clockOut: (handoverNotes) => client.post('/attendance/clock-out', handoverNotes ? { handover_notes: handoverNotes } : {}),
   today: (date) => client.get('/attendance/today', { params: date ? { date } : {} }),
   absencesToday: () => client.get('/attendance/absences-today'),
 };
+export const attendanceApi = USE_NEW_SERVER ? newAttendanceApi : legacyAttendanceApi;
 
-export const payrollApi = {
+const legacyPayrollApi = {
   summary: (staffId, from, to) => client.get('/payroll/summary', { params: { staff_id: staffId, from, to } }),
   lossDeduction: (data) => client.post('/payroll/loss-deduction', data),
 };
+export const payrollApi = USE_NEW_SERVER ? newPayrollApi : legacyPayrollApi;
 
 export const employeesApi = {
   onboard: (data) => client.post('/employees/onboard', data),
@@ -260,9 +268,10 @@ export const employeesApi = {
   signAgreement: (id, signedName) => client.post(`/employees/${id}/sign-agreement`, { signed_name: signedName }),
 };
 
-export const telesalesApi = {
+const legacyTelesalesApi = {
   rebalance: () => client.post('/telesales/rebalance'),
 };
+export const telesalesApi = USE_NEW_SERVER ? newTelesalesApi : legacyTelesalesApi;
 
 const legacyCouriersApi = {
   list: (params) => client.get('/couriers', { params }),
@@ -279,22 +288,26 @@ export const paymentReconciliationApi = USE_NEW_SERVER ? newPaymentReconciliatio
 export const custodyApi = newCustodyApi;
 export const couriersApi = USE_NEW_SERVER ? newCouriersApi : legacyCouriersApi;
 
-export const shiftApi = {
+const legacyShiftApi = {
   handover: () => client.get('/shift/handover'),
 };
+export const shiftApi = USE_NEW_SERVER ? newShiftApi : legacyShiftApi;
 
 export const receiptsApi = {
   order: (id) => client.get(`/orders/${id}/receipt`),
   sale: (id) => client.get(`/sales/${id}/receipt`),
 };
 
-export const leadRoutesApi = {
+const legacyLeadRoutesApi = {
   secret: () => client.get('/integrations/leads/secret'),
   list: () => client.get('/integrations/leads/routes'),
   create: (data) => client.post('/integrations/leads/routes', data),
   update: (id, data) => client.patch(`/integrations/leads/routes/${id}`, data),
   remove: (id) => client.delete(`/integrations/leads/routes/${id}`),
 };
+// Web-form lead routing has no module on the new server yet.
+const newLeadRoutesApi = Object.fromEntries(['secret', 'list', 'create', 'update', 'remove'].map((m) => [m, notImplemented(`leadRoutesApi.${m}`)]));
+export const leadRoutesApi = USE_NEW_SERVER ? newLeadRoutesApi : legacyLeadRoutesApi;
 
 const legacyAccessApi = {
   getPermissions: (staffId) => client.get(`/staff/${staffId}/permissions`),

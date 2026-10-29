@@ -20,7 +20,8 @@ export async function listOrders(db: Queryable, opts: { status?: OrderStatus | '
     args.push(`%${raw.replace(/[%_\\]/g, '\\$&')}%`);
     const like = `$${args.length}`;
     const parts = [`o.customer_name ILIKE ${like}`, `o.order_ref ILIKE ${like}`, `EXISTS (SELECT 1 FROM order_refs r WHERE r.ref = o.order_ref AND r.legacy_ref ILIKE ${like})`];
-    const digits = raw.replace(/\D/g, '');
+    // Phones are stored as their last 9 digits, so a number typed in full (0712 345 678, or +254 712 345 678) is cut the same way.
+    const digits = raw.replace(/\D/g, '').slice(-9);
     if (digits.length >= 3) { args.push(`%${digits}%`); parts.push(`o.phone_normalized LIKE $${args.length}`); }
     const compact = raw.replace(/[\s-]/g, '');
     if (compact !== raw && compact.length >= 3) { args.push(`%${compact}%`); parts.push(`replace(o.order_ref, '-', '') ILIKE $${args.length}`); }

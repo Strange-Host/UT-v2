@@ -5,7 +5,7 @@ import type { Pool } from '../db/pool.js';
 import { HttpError } from '../errors.js';
 import { canUser } from '../auth/permissions.js';
 import { handler, idParam, parse } from '../http.js';
-import { attendanceFor, clockIn, clockOut, markAbsent } from '../payroll/attendance.js';
+import { attendanceFor, clockIn, clockOut, markAbsent, teamAttendanceOn } from '../payroll/attendance.js';
 import { addCommissionPlan, adjustmentsFor, profilesOnPayroll, recordAdjustment, setPayProfile } from '../payroll/profiles.js';
 import { exportRunCsv, payslip, renderPayslip, salaryTable, staffBreakdown } from '../payroll/reports.js';
 import { approveRun, generateDraft, getRun, listRuns, markRunPaid } from '../payroll/runs.js';
@@ -87,6 +87,12 @@ export function payrollRouter(pool: Pool): Router {
   }));
   r.post('/attendance/absences', requirePermission('attendance.manage'), handler(async (req, res) => {
     res.status(201).json({ record: await markAbsent(pool, { ...parse(absenceBody, req.body), actor: req.user!.username }) });
+  }));
+  // Who is in today (or on a given day): every active account with their clock-in, clock-out or recorded absence.
+  r.get('/attendance/today', requirePermission('attendance.view'), handler(async (req, res) => {
+    const q = parse(z.object({ date: date.optional() }), req.query);
+    const day = q.date ?? shopDate(new Date());
+    res.json({ date: day, staff: await teamAttendanceOn(pool, day) });
   }));
   // Anyone can see their own attendance; seeing someone else's needs attendance.manage.
   r.get('/attendance', requirePermission('attendance.own'), handler(async (req, res) => {

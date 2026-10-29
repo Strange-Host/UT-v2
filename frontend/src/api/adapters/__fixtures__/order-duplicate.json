@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": "DUPLICATE_ACTIVE_ORDER",
+    "message": "This phone number already has an active order."
+  },
+  "details": {
+    "existingOrderRef": "UT-BBJPDHM5"
+  }
+}

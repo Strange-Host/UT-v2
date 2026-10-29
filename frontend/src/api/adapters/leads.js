@@ -1,5 +1,8 @@
 import client from '../client';
 import { AdapterError, mapResponse, notImplemented, toLegacyPage, toLimitOffset } from './common';
+import { people, resetDirectory } from './directory';
+
+export { resetDirectory };
 
 // Leads on the new server. Differences from the legacy pipeline (see docs/parity-harness/README.md):
 //  - Statuses: new, contacted, qualified, converted, and "cancelled" (the server's `lost`, which needs a reason). There is no "rescheduled".
@@ -12,16 +15,6 @@ const SOURCE_OUT = { referral: 'other' };
 export const toServerStatus = (s) => (s === 'cancelled' ? 'lost' : s);
 export const toPageStatus = (s) => (s === 'lost' ? 'cancelled' : s);
 
-let directory = { at: 0, people: [] };
-export const resetDirectory = () => { directory = { at: 0, people: [] }; };
-async function people() {
-  if (Date.now() - directory.at < 30_000 && directory.people.length) return directory.people;
-  try {
-    const res = await client.get('/users');
-    directory = { at: Date.now(), people: res.data.users };
-  } catch { /* a role without staff.view just sees usernames */ }
-  return directory.people;
-}
 const nameOf = (list, username) => (username ? (list.find((u) => u.username === username)?.displayName ?? username) : null);
 
 const activityType = (m) => (m.channel === 'call' ? 'call' : m.direction === 'note' ? 'note' : 'message');

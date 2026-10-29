@@ -136,7 +136,12 @@ export default client;
 // everywhere instead of reading err.response.data.error directly (that's
 // now an object, not a string — reading it raw renders "[object Object]").
 export function getErrorMessage(err, fallback = 'Something went wrong.') {
-  return err?.response?.data?.error?.message || fallback;
+  const body = err?.response?.data;
+  const message = body?.error?.message;
+  if (!message) return fallback;
+  // The new server answers a bad request with a general line plus the reasons (`details`): show them, so the person learns what to fix.
+  const reasons = Array.isArray(body.details) ? body.details.map((d) => d?.message).filter(Boolean).slice(0, 3) : [];
+  return reasons.length ? `${message} ${reasons.join(' ')}` : message;
 }
 
 // 2.1 — lets a caller check specifically for "you must change your

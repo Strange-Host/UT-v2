@@ -72,3 +72,14 @@ export async function attendanceFor(db: Queryable, staffKey: string, from: strin
     `SELECT ${COLS} FROM attendance_records WHERE staff_key = $1 AND work_date BETWEEN $2 AND $3 ORDER BY work_date`, [staffKey, from, to]);
   return rows.map(toRec);
 }
+
+export interface TeamAttendance { userId: number; staffKey: string; name: string; role: string; clockInAt: Date | null; clockOutAt: Date | null; absenceReason: string | null }
+
+/** Every active staff account with what is recorded for them on one shop day (nothing recorded = not clocked in). */
+export async function teamAttendanceOn(db: Queryable, workDate: string): Promise<TeamAttendance[]> {
+  const { rows } = await db.query<{ id: number; username: string; display_name: string; role: string; clock_in_at: Date | null; clock_out_at: Date | null; absence_reason: string | null }>(
+    `SELECT u.id, u.username, u.display_name, u.role, a.clock_in_at, a.clock_out_at, a.absence_reason
+       FROM users u LEFT JOIN attendance_records a ON a.staff_key = u.username AND a.work_date = $1
+      WHERE u.active AND u.erased_at IS NULL ORDER BY lower(u.display_name), u.id`, [workDate]);
+  return rows.map((r) => ({ userId: Number(r.id), staffKey: r.username, name: r.display_name, role: r.role, clockInAt: r.clock_in_at, clockOutAt: r.clock_out_at, absenceReason: r.absence_reason }));
+}

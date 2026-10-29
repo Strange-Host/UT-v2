@@ -6,6 +6,7 @@ import policy from './__fixtures__/security-policy.json';
 import saved from './__fixtures__/security-policy-saved.json';
 import sessions from './__fixtures__/auth-sessions.json';
 import revoked from './__fixtures__/auth-revoke-others.json';
+import events from './__fixtures__/security-events.json';
 import ended from './__fixtures__/auth-session-ended.json';
 
 // Fixtures are recorded answers of the real new server (server/tests/contractFixtures.test.ts keeps them honest).
@@ -34,8 +35,14 @@ describe('the sign-in rules', () => {
     const err = await newSecurityApi.updatePolicy(policy.policy).catch((e) => e);
     expect(getErrorMessage(err, 'Could not save.')).toMatch(/signing out must come after/);
   });
-  it('have no security log to list yet, and say so', async () => {
-    await expect(newSecurityApi.events({ limit: 40 })).rejects.toThrow(/not available on the new server yet/);
+  it('lists the security events as the rows the page shows, newest first', async () => {
+    const get = vi.spyOn(client, 'get').mockReturnValue(ok(events));
+    const res = await newSecurityApi.events({ limit: 40 });
+    expect(get).toHaveBeenCalledWith('/security/events', { params: { limit: 40 } });
+    expect(res.data.data).toHaveLength(events.events.length);
+    expect(res.data.data[0]).toEqual({ id: events.events[0].id, severity: events.events[0].severity, title: events.events[0].title, detail: events.events[0].detail, created_at: events.events[0].at, ip: events.events[0].ip });
+    expect(['urgent', 'warning', 'info']).toContain(res.data.data[0].severity);
+    expect(JSON.stringify(res.data)).not.toMatch(/"action"|"actor"/); // only what the row shows
   });
 });
 

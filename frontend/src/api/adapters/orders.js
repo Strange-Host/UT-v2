@@ -1,5 +1,6 @@
 import client from '../client';
 import { AdapterError, mapResponse, notImplemented, toLegacyPage, toLimitOffset } from './common';
+import { people } from './directory';
 
 // The Orders page, on the new server. The new engine models an order differently from the legacy app, so this file does three jobs:
 //   1. reshape what the server sends into what the page reads (ids, snake_case, one combined legacy status, history lines);
@@ -126,6 +127,29 @@ const empty = (page, pageSize) => ({ status: 200, data: { ...toLegacyPage([], 0,
 const refOf = (id) => encodeURIComponent(String(id));
 
 // Why a payment cannot be typed in against an order any more, in the words the page shows.
+/** The page's item lines -> the server's: it wants the code, name and unit price, so a product is read when only its id is given. */
+async function toLines(items) {
+  if (!Array.isArray(items) || items.length === 0) throw new AdapterError('ORDER_NO_ITEMS', 'Add at least one item.');
+  return Promise.all(items.map(async (i) => {
+    const quantity = Math.max(1, Math.floor(Number(i.quantity) || 1));
+    const discountCents = Number.isInteger(i.discount) && i.discount > 0 ? { discountCents: i.discount } : {};
+    if (i.name && Number.isInteger(i.unit_price)) return { ...(i.sku ? { sku: i.sku } : {}), name: i.name, quantity, unitPriceCents: i.unit_price, ...discountCents };
+    const { data } = await client.get(`/products/${encodeURIComponent(String(i.product_id))}`);
+    return { sku: data.product.sku, name: data.product.name, quantity, unitPriceCents: i.unit_price ?? data.product.priceCents, ...discountCents };
+  }));
+}
+
+/** What a pull did, as the "Pull online orders" box words it. */
+export function adaptPull(r, days) {
+  const notes = [];
+  if (r.needsReview > 0) notes.push(`${r.needsReview} order${r.needsReview === 1 ? '' : 's'} could not be taken as they stand and ${r.needsReview === 1 ? 'is' : 'are'} kept for a person to look at.`);
+  if (r.needsAttention > 0) notes.push(`${r.needsAttention} cancelled in the store ${r.needsAttention === 1 ? 'is' : 'are'} not cancelled here: money was paid on ${r.needsAttention === 1 ? 'it' : 'them'} or ${r.needsAttention === 1 ? 'it is' : 'they are'} already out for delivery.`);
+  return {
+    found: r.found, imported: r.imported, cancelled: r.cancelled, skipped: r.unchanged, ignored: r.ignored,
+    failed: r.failed + r.needsReview, errors: r.errors, days: days ?? null, ...(notes.length ? { hint: notes.join(' ') } : {}),
+  };
+}
+
 export const PAYMENT_ELSEWHERE = 'M-Pesa, bank and card payments arrive on their own and are matched to the order under Finance > Reconciliation. Only cash taken at the shop can be recorded here.';
 
 const RETURN_REASON_TEXT = { rejected: 'Customer rejected the parcel', damaged: 'Parcel arrived damaged', wrong_item: 'Wrong item sent' };
@@ -183,22 +207,24 @@ export const newOrdersApi = {
   },
 
   // Adding items to an order that is still waiting to leave the shop (the merge when a phone number already has an active order).
-  // The legacy page sends { product_id, quantity }: the new server wants the product's code, name and price, so they are read here.
-  mergeItems: async (id, items) => {
-    if (!Array.isArray(items) || items.length === 0) throw new AdapterError('ORDER_NO_ITEMS', 'Add at least one item.');
-    const lines = await Promise.all(items.map(async (i) => {
-      const quantity = Math.max(1, Math.floor(Number(i.quantity) || 1));
-      if (i.sku && i.name && Number.isInteger(i.unit_price)) return { sku: i.sku, name: i.name, quantity, unitPriceCents: i.unit_price };
-      const { data } = await client.get(`/products/${encodeURIComponent(String(i.product_id))}`);
-      return { sku: data.product.sku, name: data.product.name, quantity, unitPriceCents: data.product.priceCents };
-    }));
-    return mapResponse(client.post(`/orders/${refOf(id)}/items`, { items: lines }), (d) => ({ data: adaptOrderDetail(d.order) }));
-  },
+  mergeItems: async (id, items) => mapResponse(client.post(`/orders/${refOf(id)}/items`, { items: await toLines(items) }), (d) => ({ data: adaptOrderDetail(d.order) })),
 
-  // Not on the new engine yet, or replaced by something else (see the status report): clear errors, never a silent fallback.
-  create: notImplemented('ordersApi.create'),
-  onlineSources: notImplemented('ordersApi.onlineSources'),
-  pullOnline: notImplemented('ordersApi.pullOnline'),
+  // A new order made by hand. Items are { product_id, quantity } (the product's code, name and price are read here) or
+  // { sku, name, unit_price, quantity } in cents; `discount` is in cents. A phone that already has an active order is refused with
+  // the server's message (the reference of that order is in the error's details).
+  create: async ({ customer_name: name, customer_phone: phone, items, discount, notes, assigned_staff_id: staffId } = {}) => {
+    let assignedTo;
+    if (staffId) {
+      assignedTo = (await people()).find((u) => String(u.id) === String(staffId))?.username;
+      if (!assignedTo) throw new AdapterError('STAFF_NOT_FOUND', 'That staff member could not be found.');
+    }
+    const body = { customerName: name, customerPhone: phone, items: await toLines(items), ...(discount ? { discountCents: discount } : {}), ...(notes ? { notes } : {}), ...(assignedTo ? { assignedTo } : {}) };
+    return mapResponse(client.post('/orders', body), (d) => ({ data: adaptOrderDetail(d.order) }));
+  },
+  // The stores that can be pulled from: [{ id, name, platform }].
+  onlineSources: () => mapResponse(client.get('/online-orders/connections'), (d) => ({ data: d.connections })),
+  // Brings in what still needs shipping. Orders the server keeps for a person to look at count with the ones that could not be added.
+  pullOnline: (sourceId, days) => mapResponse(client.post('/online-orders/pull', { sourceId, ...(days ? { days } : {}) }), (d) => ({ data: adaptPull(d, days) })),
   ownerDecision: notImplemented('ordersApi.ownerDecision'),
   pendingOwnerDecision: notImplemented('ordersApi.pendingOwnerDecision'),
   openDispute: notImplemented('ordersApi.openDispute'),

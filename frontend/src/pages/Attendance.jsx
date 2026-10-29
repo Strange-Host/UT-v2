@@ -2,9 +2,14 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { attendanceApi, telesalesApi, shiftApi } from '../api/endpoints';
 import { getErrorMessage } from '../api/client';
+import { USE_NEW_SERVER } from '../api/newServer';
 import HandoverModal from '../components/HandoverModal';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, StatusPill } from '../components/DataUI';
+
+// The new server lists every active staff account, and does not reassign anyone's leads or orders yet (item 4.6).
+const TEAM_TITLE = USE_NEW_SERVER ? 'Today · team' : 'Today · telesales team';
+const CAN_REBALANCE = !USE_NEW_SERVER;
 
 function time(ts) {
   return ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
@@ -131,7 +136,7 @@ export default function Attendance() {
             <div className="mb-5 px-3.5 py-3 rounded-lg bg-danger-soft text-danger text-sm">
               <strong>{absent.length} not clocked in today:</strong>{' '}
               {absent.map((a) => a.name).join(', ')}.
-              {isAdmin && (
+              {isAdmin && CAN_REBALANCE && (
                 <>
                   {' '}Their open leads and orders are reassigned automatically after the cutoff hour.{' '}
                   <button onClick={handleRebalance} disabled={busy} className="underline disabled:opacity-50">
@@ -144,12 +149,12 @@ export default function Attendance() {
 
           <div className="bg-surface border border-line rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-line font-display font-600 text-sm">
-              Today · telesales team
+              {TEAM_TITLE}
             </div>
             {isLoading && <div className="p-6 text-text-muted text-sm">Loading…</div>}
             {!isLoading && rows.length === 0 && (
               <div className="p-8 text-center text-text-muted text-sm">
-                No telesales staff on record yet.
+                {USE_NEW_SERVER ? 'No staff on record yet.' : 'No telesales staff on record yet.'}
               </div>
             )}
             {rows.length > 0 && (
@@ -170,7 +175,7 @@ export default function Attendance() {
                       <td className="px-4 py-3 font-mono text-xs">{time(r.clock_out_at)}</td>
                       <td className="px-4 py-3">
                         {!r.clock_in_at ? (
-                          <StatusPill tone="danger">Absent</StatusPill>
+                          <StatusPill tone="danger">{r.absence_reason ? `Absent · ${r.absence_reason}` : 'Absent'}</StatusPill>
                         ) : r.clock_out_at ? (
                           <StatusPill>Shift ended</StatusPill>
                         ) : (

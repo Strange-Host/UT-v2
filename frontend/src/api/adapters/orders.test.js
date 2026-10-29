@@ -1,6 +1,10 @@
+import createdFixture from './__fixtures__/order-created.json';
+import duplicateFixture from './__fixtures__/order-duplicate.json';
+import connectionsFixture from './__fixtures__/online-connections.json';
+import pullFixture from './__fixtures__/online-pull.json';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import client, { getErrorMessage } from '../client';
-import { newOrdersApi, legacyStatus, adaptOrderSummary, adaptOrderDetail, describeEvent, statusFilter, PAYMENT_ELSEWHERE } from './orders';
+import { newOrdersApi, adaptPull, legacyStatus, adaptOrderSummary, adaptOrderDetail, describeEvent, statusFilter, PAYMENT_ELSEWHERE } from './orders';
 import { newCouriersApi } from './couriers';
 import list from './__fixtures__/orders-list.json';
 import out from './__fixtures__/order-out-for-delivery.json';
@@ -208,7 +212,7 @@ describe('what the buttons do', () => {
 
   it('rejects, clearly, what the new engine does not do (and never reaches a server)', async () => {
     const p = post();
-    for (const name of ['setCourier', 'inspect', 'returnedAwaitingInspection', 'ownerDecision', 'openDispute', 'resolveDispute', 'pullOnline']) {
+    for (const name of ['setCourier', 'inspect', 'returnedAwaitingInspection', 'ownerDecision', 'openDispute', 'resolveDispute']) {
       const err = await newOrdersApi[name]('UT-9').catch((e) => e);
       expect(err.response.data.error.code, name).toBe('NOT_IMPLEMENTED_ON_NEW_SERVER');
     }
@@ -228,5 +232,60 @@ describe('couriers for the picker', () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({ data: couriers });
     await newCouriersApi.list();
     expect(get).toHaveBeenCalledWith('/couriers', { params: { active: 'true' } });
+  });
+});
+
+const postWith = (data, status = 200) => vi.spyOn(client, 'post').mockResolvedValue({ status, data });
+
+describe('making an order by hand', () => {
+  const made = JSON.parse(JSON.stringify(createdFixture));
+  it('sends the customer, the lines and the discount, and gives back the order in the page shape', async () => {
+    const p = postWith(made, 201);
+    const res = await newOrdersApi.create({ customer_name: 'Hand Made', customer_phone: '0755000917', items: [{ sku: 'PULL-1', name: 'Pulled shoe', unit_price: 150_000, quantity: 2 }], discount: 10_000, notes: 'By phone' });
+    expect(p).toHaveBeenCalledWith('/orders', { customerName: 'Hand Made', customerPhone: '0755000917', items: [{ sku: 'PULL-1', name: 'Pulled shoe', quantity: 2, unitPriceCents: 150_000 }], discountCents: 10_000, notes: 'By phone' });
+    expect(res.data.data).toMatchObject({ id: made.order.orderRef, customer: { name: 'Hand Made', phone: '0755000917' } });
+  });
+  it('reads a product by id for its code, name and price', async () => {
+    vi.spyOn(client, 'get').mockResolvedValue({ data: { product: { sku: 'AB-1', name: 'Boot', priceCents: 99_000 } } });
+    const p = postWith(made, 201);
+    await newOrdersApi.create({ customer_name: 'A', customer_phone: '0700', items: [{ product_id: 5, quantity: '3' }] });
+    expect(p.mock.calls[0][1].items).toEqual([{ sku: 'AB-1', name: 'Boot', quantity: 3, unitPriceCents: 99_000 }]);
+  });
+  it('refuses an order with no items without asking the server', async () => {
+    const p = postWith(made, 201);
+    await expect(newOrdersApi.create({ customer_name: 'A', customer_phone: '0700', items: [] })).rejects.toMatchObject({ response: { data: { error: { code: 'ORDER_NO_ITEMS' } } } });
+    expect(p).not.toHaveBeenCalled();
+  });
+  it("shows the server's reason when the phone already has an active order", async () => {
+    vi.spyOn(client, 'post').mockRejectedValue({ response: { status: 409, data: duplicateFixture } });
+    const err = await newOrdersApi.create({ customer_name: 'A', customer_phone: '0755000917', items: [{ sku: 'X', name: 'X', unit_price: 1, quantity: 1 }] }).catch((e) => e);
+    expect(getErrorMessage(err)).toBe('This phone number already has an active order.');
+    expect(err.response.data.details.existingOrderRef).toMatch(/^UT-/);
+  });
+});
+
+describe('pulling online orders', () => {
+  it('lists the connected stores as { id, name, platform }', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({ data: connectionsFixture });
+    const res = await newOrdersApi.onlineSources();
+    expect(get).toHaveBeenCalledWith('/online-orders/connections');
+    expect(res.data.data).toEqual([{ id: connectionsFixture.connections[0].id, name: 'Fixture store', platform: 'shopify' }]);
+  });
+  it('pulls from one store and answers in the words of the pull box', async () => {
+    const p = postWith(pullFixture);
+    const res = await newOrdersApi.pullOnline(1, 30);
+    expect(p).toHaveBeenCalledWith('/online-orders/pull', { sourceId: 1, days: 30 });
+    expect(res.data.data).toEqual({ found: 1, imported: 1, cancelled: 0, skipped: 0, ignored: 0, failed: 0, errors: [], days: 30 });
+  });
+  it('counts what is kept for a person as not added, and explains what needs attention', () => {
+    const r = adaptPull({ ...pullFixture, found: 5, imported: 2, ignored: 1, needsReview: 2, needsAttention: 1, failed: 0, errors: ['Order 1: no phone number', 'Order 2: unreadable price'] }, 60);
+    expect(r).toMatchObject({ imported: 2, failed: 2, errors: ['Order 1: no phone number', 'Order 2: unreadable price'], days: 60 });
+    expect(r.hint).toMatch(/2 orders could not be taken as they stand and are kept for a person/);
+    expect(r.hint).toMatch(/1 cancelled in the store is not cancelled here/);
+  });
+  it("shows the server's reason when a pull is refused", async () => {
+    vi.spyOn(client, 'post').mockRejectedValue({ response: { status: 502, data: { error: { code: 'STORE_UNREACHABLE', message: 'The store did not answer. Try again in a minute.' } } } });
+    const err = await newOrdersApi.pullOnline(1).catch((e) => e);
+    expect(getErrorMessage(err)).toBe('The store did not answer. Try again in a minute.');
   });
 });

@@ -1,0 +1,9 @@
+{
+  "connections": [
+    {
+      "id": 1,
+      "name": "Fixture store",
+      "platform": "shopify"
+    }
+  ]
+}

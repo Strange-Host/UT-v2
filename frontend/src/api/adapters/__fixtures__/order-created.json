@@ -1,0 +1,46 @@
+{
+  "order": {
+    "id": 7,
+    "orderRef": "UT-BBJPDHM5",
+    "status": "awaiting_dispatch",
+    "customerName": "Hand Made",
+    "customerPhone": "0755000917",
+    "subtotalCents": 300000,
+    "discountCents": 0,
+    "totalCents": 300000,
+    "balanceCents": 300000,
+    "paidCents": 0,
+    "collectedByOrganizationCents": 0,
+    "paymentStatus": "unpaid",
+    "dispatch": null,
+    "items": [
+      {
+        "id": 7,
+        "sku": "PULL-1",
+        "name": "Pulled shoe",
+        "quantity": 2,
+        "unitPriceCents": 150000,
+        "discountCents": 0,
+        "lineTotalCents": 300000
+      }
+    ],
+    "attempts": [],
+    "events": [
+      {
+        "type": "created",
+        "actor": "manager8xu5tx",
+        "at": "2026-10-29T11:12:17.240Z",
+        "data": {
+          "items": 1,
+          "total_cents": 300000
+        }
+      }
+    ],
+    "returned": null,
+    "confirmedAt": null,
+    "confirmedBy": null,
+    "createdAt": "2026-10-29T11:12:17.240Z",
+    "dispatchedAt": null,
+    "deliveredAt": null
+  }
+}

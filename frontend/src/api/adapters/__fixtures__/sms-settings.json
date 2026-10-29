@@ -1,0 +1,12 @@
+{
+  "settings": {
+    "sms_enabled": "1",
+    "sms_send_order_received": "1",
+    "sms_send_payment_received": "1",
+    "sms_message_type": "unicode",
+    "sms_delivery_promise": "Within 24 hours.",
+    "sms_catalog_url": "",
+    "paybill_number": "",
+    "kcb_account_prefix": ""
+  }
+}

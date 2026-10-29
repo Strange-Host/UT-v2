@@ -32,7 +32,7 @@ const ROUTES: [M, string, Role][] = [
   ['get', '/api/payroll/runs', 'manager'], ['post', '/api/payroll/runs', 'manager'], ['post', '/api/payroll/runs/1/approve', 'admin'], ['post', '/api/payroll/runs/1/pay', 'admin'],
   ['get', '/api/payroll/plans', 'manager'], ['post', '/api/payroll/plans', 'admin'], ['get', '/api/payroll/profiles', 'manager'], ['post', '/api/payroll/profiles', 'admin'],
   ['get', '/api/payroll/adjustments', 'manager'], ['post', '/api/payroll/adjustments', 'manager'], ['post', '/api/payroll/attendance/absences', 'manager'],
-  ['post', '/api/payroll/attendance/clock-in', 'cashier'], ['post', '/api/payroll/attendance/clock-out', 'cashier'], ['get', '/api/payroll/attendance', 'cashier'],
+  ['post', '/api/payroll/attendance/clock-in', 'cashier'], ['post', '/api/payroll/attendance/clock-out', 'cashier'], ['get', '/api/payroll/attendance', 'cashier'], ['get', '/api/payroll/attendance/today', 'manager'],
   ['get', '/api/payroll/salary', 'manager'], ['get', '/api/payroll/runs/1/export.csv', 'manager'],
   // till, sales, policy, audit, reports
   ['get', '/api/till/current', 'cashier'], ['post', '/api/till/sessions', 'cashier'], ['get', '/api/till/sessions', 'manager'], ['get', '/api/till/sessions/1', 'cashier'],
@@ -42,6 +42,7 @@ const ROUTES: [M, string, Role][] = [
   ['get', '/api/discount-policies', 'manager'], ['put', '/api/discount-policies', 'admin'],
   ['get', '/api/audit', 'manager'], ['get', '/api/reports/discounts', 'manager'], ['get', '/api/reports/risky-actions', 'manager'], ['get', '/api/reports/trial-balance', 'manager'],
   ['get', '/api/integrity', 'manager'], ['post', '/api/integrity/run', 'admin'],
+  ['get', '/api/security/policy', 'admin'], ['put', '/api/security/policy', 'admin'], ['get', '/api/security/events', 'admin'], ['get', '/api/sms/settings', 'manager'], ['put', '/api/sms/settings', 'admin'],
 ];
 const RANK: Record<Role, number> = { cashier: 0, manager: 1, admin: 2 };
 

@@ -1,0 +1,35 @@
+{
+  "total": 2,
+  "messages": [
+    {
+      "id": 2,
+      "toPhone": "254722345678",
+      "template": "payment_received",
+      "body": "Payment received",
+      "relatedType": null,
+      "relatedId": null,
+      "status": "failed",
+      "attempts": 5,
+      "lastError": "gateway said no",
+      "providerResponse": null,
+      "createdAt": "2026-10-29T11:31:25.640Z",
+      "sentAt": null
+    },
+    {
+      "id": 1,
+      "toPhone": "254712345678",
+      "template": "order_received",
+      "body": "Order received",
+      "relatedType": "order",
+      "relatedId": "UT-1",
+      "status": "queued",
+      "attempts": 0,
+      "lastError": null,
+      "providerResponse": null,
+      "createdAt": "2026-10-29T11:31:25.639Z",
+      "sentAt": null
+    }
+  ],
+  "page": 1,
+  "limit": 10
+}

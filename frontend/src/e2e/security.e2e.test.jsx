@@ -80,9 +80,16 @@ describe.skipIf(!RUN_E2E)('the Security page against the real new server', () =>
     await api('put', '/security/policy', { roles: { cashier: { lockMinutes: was } } });
   }, 40_000);
 
-  it('says the security log is not available yet, instead of an empty list', async () => {
+  it('lists real security events: a lockout shows as urgent with who it was', async () => {
+    const t = Date.now().toString(36);
+    await api('post', '/users', { username: `lock.${t}`, displayName: `Lock ${t}`, role: 'cashier' });
+    for (let i = 0; i < 5; i += 1) await axios.post(`${API}/auth/login`, { username: `lock.${t}`, password: 'wrong-wrong-1' }).catch(() => null);
     render(<Page />);
-    expect(await screen.findByText(/securityApi\.events is not available on the new server yet/)).toBeInTheDocument();
+    const title = await screen.findByText(`lock.${t} was locked out`);
+    const row = title.closest('li');
+    expect(within(row).getByText('urgent')).toBeInTheDocument();
+    expect(within(row).getByText('Too many wrong passwords.')).toBeInTheDocument();
+    expect(screen.queryByText(/not available on the new server/)).toBeNull();
     expect(screen.queryByText(/Nothing yet/)).toBeNull();
   }, 30_000);
 });

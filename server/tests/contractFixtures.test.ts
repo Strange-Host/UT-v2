@@ -11,6 +11,13 @@ import { makeTestDb, type TestDb } from './helpers.js';
 import { loggedIn } from './authHelpers.js';
 import { KEY } from './orderHelpers.js';
 import { ingestPaybillPayment, recordShopCash } from '../src/orders/payments.js';
+import { clockIn, clockOut, markAbsent } from '../src/payroll/attendance.js';
+import { shopDate } from '../src/payroll/time.js';
+import { createProduct } from '../src/catalog/products.js';
+import { createSource, setSourceSecret } from '../src/integrations/sources.js';
+import { receiveStock } from '../src/stock/stock.js';
+import { enqueue } from '../src/sms/sms.js';
+import { fakeFetch, json, shopifyOrder } from './storeHelpers.js';
 
 // The frontend adapters are tested against recorded answers of THIS server (frontend/src/api/adapters/__fixtures__). This test
 // fails when the server's answers stop having the same shape as the recording, so a server change cannot quietly break a screen.
@@ -203,11 +210,110 @@ describe('what the Security screen reads from the server', () => {
     const saved = await as(request(app).put('/api/security/policy')).send(policy.body.policy);
     const ended = await as(request(app).delete(`/api/auth/sessions/${other.body.session.id}`));
     const others = await as(request(app).post('/api/auth/sessions/revoke-others')).send({});
-    expect([other.status, third.status, policy.status, saved.status, ended.status, others.status]).toEqual([200, 200, 200, 200, 200, 200]);
+    for (let i = 0; i < 5; i += 1) await request(app).post('/api/auth/login').send({ username: admin.username, password: 'wrong-wrong-1' });
+    const events = await as(request(app).get('/api/security/events?limit=40'));
+    expect([other.status, third.status, policy.status, saved.status, ended.status, others.status, events.status]).toEqual([200, 200, 200, 200, 200, 200, 200]);
+    expect(events.body.events.map((e: { severity: string }) => e.severity)).toContain('urgent');
     expect(others.body.ended).toBeGreaterThanOrEqual(1);
     check('security-policy', policy.body);
     check('security-policy-saved', saved.body);
     check('auth-session-ended', ended.body);
     check('auth-revoke-others', others.body);
+    check('security-events', events.body);
+  });
+});
+
+describe('what the Attendance screen reads from the server', () => {
+  it('keeps clock-in, the team list for today and clock-out in the recorded shape', async () => {
+    const app = createApp({ pool: db.pool, logger: createLogger('silent') });
+    const mgr = await loggedIn(db.pool, 'manager');
+    const as = (r: request.Test) => r.set('Authorization', mgr.auth);
+    const absent = await createUser(db.pool, { username: 'absent.fixture', displayName: 'Absent Fixture', role: 'cashier', actor: 'test-setup' });
+    await markAbsent(db.pool, { staffKey: absent.user.username, workDate: shopDate(new Date()), reason: 'Sick, called in', actor: mgr.username });
+    const clockedIn = await as(request(app).post('/api/payroll/attendance/clock-in')).send({});
+    const today = await as(request(app).get('/api/payroll/attendance/today'));
+    const clockedOut = await as(request(app).post('/api/payroll/attendance/clock-out')).send({});
+    expect([clockedIn.status, today.status, clockedOut.status]).toEqual([201, 200, 200]);
+    check('attendance-clock-in', clockedIn.body);
+    check('attendance-today', today.body);
+    check('attendance-clock-out', clockedOut.body);
+  });
+});
+
+describe('what the Payroll screen reads from the server', () => {
+  it('keeps one person\'s pay for a period (retainer, commission, late, absence, missing hours, advance, loss, bonus) in the recorded shape', async () => {
+    const app = createApp({ pool: db.pool, logger: createLogger('silent') });
+    const admin = await loggedIn(db.pool, 'admin');
+    const as = (r: request.Test) => r.set('Authorization', admin.auth);
+    const { user } = await createUser(db.pool, { username: 'pay.fixture', displayName: 'Pay Fixture', role: 'cashier', actor: 'test-setup' });
+    const plan = (await as(request(app).post('/api/payroll/plans')).send({ name: 'Fixture plan', targetCents: 10_000_000, rateBelow70Cents: 5_000, rate70Cents: 7_500, rate80Cents: 10_000 })).body.plan;
+    const profile = await as(request(app).post('/api/payroll/profiles')).send({ staffKey: user.username, effectiveFrom: '2026-10-01', dailyRetainerCents: 100_000, commissionPlanId: plan.id, lateFeePerHourCents: 10_000, absenceFeeCents: 100_000, missingHourFeeCents: 5_000 });
+    // 2 October: in at 09:30 (1 hour late on the default 08:00 start), out at 15:00 (short of the expected hours). 3 October: absent.
+    await clockIn(db.pool, { staffKey: user.username, at: new Date('2026-10-02T06:30:00Z') });
+    await clockOut(db.pool, { staffKey: user.username, at: new Date('2026-10-02T12:00:00Z') });
+    await markAbsent(db.pool, { staffKey: user.username, workDate: '2026-10-03', reason: 'No call, no show', actor: admin.username });
+    const adj = (type: string, amountCents: number, reason: string) => as(request(app).post('/api/payroll/adjustments')).send({ staffKey: user.username, type, amountCents, effectiveDate: '2026-10-04', reason });
+    const made = [await adj('salary_advance', 200_000, 'Advance'), await adj('loss_deduction', 50_000, 'Till shortfall'), await adj('bonus', 30_000, 'Good month')];
+    const pay = await as(request(app).get(`/api/payroll/staff/${user.username}?from=2026-10-01&to=2026-10-31`));
+    const none = await as(request(app).get(`/api/payroll/staff/${admin.username}?from=2026-10-01&to=2026-10-31`));
+    expect([profile.status, ...made.map((m) => m.status), pay.status, none.status]).toEqual([201, 201, 201, 201, 200, 404]);
+    expect(pay.body.item.lines.map((l: { kind: string }) => l.kind).sort()).toEqual(expect.arrayContaining(['retainer_day', 'late', 'absence', 'missing_hours', 'salary_advance', 'loss_deduction', 'bonus']));
+    check('payroll-staff-pay', pay.body);
+    check('payroll-adjustment', made[1]!.body);
+    check('payroll-no-profile', none.body);
+  });
+});
+
+describe('what the Orders screen reads for creating an order and pulling online orders', () => {
+  it('keeps the order made by hand, the connected stores and a pull from a store in the recorded shape', async () => {
+    const SECRETS_KEY = 'secrets-key-for-tests-0123456789abcdef-xyz';
+    const store = fakeFetch((c) => (c.url.pathname === '/admin/oauth/access_token' ? json({ access_token: 'shpat_x', scope: 'read_orders', expires_in: 86_399 }) : json({ orders: [shopifyOrder('PULL-1')] })));
+    const app = createApp({ pool: db.pool, logger: createLogger('silent'), orderRefKey: KEY, secretsKey: SECRETS_KEY, storeFetch: store });
+    const mgr = await loggedIn(db.pool, 'manager');
+    const as = (r: request.Test) => r.set('Authorization', mgr.auth);
+    const product = await createProduct(db.pool, { sku: 'PULL-1', name: 'Pulled shoe', priceCents: 150_000, actor: 'test-setup', role: 'manager' });
+    await receiveStock(db.pool, { productId: product.id, quantity: 20, actor: 'test-setup', role: 'manager' });
+    const source = await createSource(db.pool, { platform: 'shopify', name: 'Fixture store', shopDomain: 'fixture.myshopify.com', apiKey: 'client-id', liveSyncEnabled: true });
+    await setSourceSecret(db.pool, SECRETS_KEY, source, 'client-secret', 'admin');
+
+    const made = await as(request(app).post('/api/orders')).send({ customerName: 'Hand Made', customerPhone: '0755000917', items: [{ sku: 'PULL-1', name: 'Pulled shoe', quantity: 2, unitPriceCents: 150_000 }], notes: 'By phone' });
+    const again = await as(request(app).post('/api/orders')).send({ customerName: 'Hand Made', customerPhone: '0755000917', items: [{ sku: 'PULL-1', name: 'Pulled shoe', quantity: 1, unitPriceCents: 150_000 }] });
+    expect(again.status).toBe(409);
+    const connections = await as(request(app).get('/api/online-orders/connections'));
+    const pulled = await as(request(app).post('/api/online-orders/pull')).send({ sourceId: source.id, days: 30 });
+    expect([made.status, connections.status, pulled.status]).toEqual([201, 200, 200]);
+    expect(pulled.body.imported).toBe(1);
+    check('order-created', made.body);
+    check('order-duplicate', again.body);
+    check('online-connections', connections.body);
+    check('online-pull', pulled.body);
+  });
+});
+
+describe('what the Messaging settings screen reads from the server', () => {
+  it('keeps the SMS status, credentials, options, recent messages, a test send and a retry in the recorded shape', async () => {
+    const SECRETS_KEY = 'secrets-key-for-tests-0123456789abcdef-xyz';
+    const gateway = fakeFetch(() => json({ status: 'success' }));
+    const app = createApp({ pool: db.pool, logger: createLogger('silent'), secretsKey: SECRETS_KEY, sms: { fetch: gateway } });
+    const admin = await loggedIn(db.pool, 'admin');
+    const as = (r: request.Test) => r.set('Authorization', admin.auth);
+    const saved = await as(request(app).put('/api/sms/credentials')).send({ userId: 'zet-user', password: 'zet-pass-123', senderId: 'URBAN' });
+    const options = await as(request(app).put('/api/sms/settings')).send({ sms_enabled: '1', sms_delivery_promise: 'Within 24 hours.' });
+    await enqueue(db.pool, { toPhone: '0712345678', template: 'order_received', body: 'Order received', relatedType: 'order', relatedId: 'UT-1', dedupeKey: 'fixture-1' });
+    const failed = await enqueue(db.pool, { toPhone: '0722345678', template: 'payment_received', body: 'Payment received', dedupeKey: 'fixture-2' });
+    await db.pool.query(`UPDATE sms_outbox SET status = 'failed', attempts = 5, last_error = 'gateway said no' WHERE id = $1`, [(failed as { id: number }).id]);
+    const status = await as(request(app).get('/api/sms/status'));
+    const credentials = await as(request(app).get('/api/sms/credentials'));
+    const outbox = await as(request(app).get('/api/sms/outbox?limit=10'));
+    const test = await as(request(app).post('/api/sms/test')).send({ to: '0712345678' });
+    const retried = await as(request(app).post(`/api/sms/outbox/${(failed as { id: number }).id}/retry`)).send({});
+    expect([saved.status, options.status, status.status, credentials.status, outbox.status, test.status, retried.status]).toEqual([200, 200, 200, 200, 200, 200, 200]);
+    expect(JSON.stringify([saved.body, credentials.body, status.body])).not.toMatch(/zet-pass-123|zet-user/);
+    check('sms-status', status.body);
+    check('sms-credentials', credentials.body);
+    check('sms-settings', options.body);
+    check('sms-outbox', outbox.body);
+    check('sms-test', test.body);
+    check('sms-retry', retried.body);
   });
 });
