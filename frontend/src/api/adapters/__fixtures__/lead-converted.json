@@ -1,0 +1,80 @@
+{
+  "lead": {
+    "id": 1,
+    "name": "Achieng",
+    "phone": "0733000001",
+    "source": "whatsapp",
+    "productInterest": null,
+    "notes": "Wants size 40",
+    "status": "converted",
+    "assignedTo": "manager4xz87a",
+    "lostReason": null,
+    "convertedOrderRef": "UT-S3XVPK4S",
+    "convertedAt": "2026-10-28T23:54:02.940Z",
+    "createdBy": "manager4xz87a",
+    "createdAt": "2026-10-28T23:54:02.895Z",
+    "updatedAt": "2026-10-28T23:54:02.940Z",
+    "messages": [
+      {
+        "id": 1,
+        "direction": "inbound",
+        "channel": "internal",
+        "body": "Still interested",
+        "actor": "manager4xz87a",
+        "at": "2026-10-28T23:54:02.901Z"
+      },
+      {
+        "id": 2,
+        "direction": "note",
+        "channel": "call",
+        "body": "Called, no answer",
+        "actor": "manager4xz87a",
+        "at": "2026-10-28T23:54:02.907Z"
+      }
+    ]
+  },
+  "order": {
+    "id": 6,
+    "orderRef": "UT-S3XVPK4S",
+    "status": "awaiting_dispatch",
+    "customerName": "Achieng",
+    "customerPhone": "0733000001",
+    "subtotalCents": 250000,
+    "discountCents": 0,
+    "totalCents": 250000,
+    "balanceCents": 250000,
+    "paidCents": 0,
+    "collectedByOrganizationCents": 0,
+    "paymentStatus": "unpaid",
+    "dispatch": null,
+    "items": [
+      {
+        "id": 6,
+        "sku": "LD-1",
+        "name": "Lead shoe",
+        "quantity": 1,
+        "unitPriceCents": 250000,
+        "discountCents": 0,
+        "lineTotalCents": 250000
+      }
+    ],
+    "attempts": [],
+    "events": [
+      {
+        "type": "created",
+        "actor": "manager4xz87a",
+        "at": "2026-10-28T23:54:02.940Z",
+        "data": {
+          "items": 1,
+          "total_cents": 250000
+        }
+      }
+    ],
+    "returned": null,
+    "confirmedAt": null,
+    "confirmedBy": null,
+    "createdAt": "2026-10-28T23:54:02.940Z",
+    "dispatchedAt": null,
+    "deliveredAt": null
+  }
+}

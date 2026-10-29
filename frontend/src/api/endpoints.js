@@ -5,6 +5,8 @@ import { newOrdersApi } from './adapters/orders';
 import { newCouriersApi } from './adapters/couriers';
 import { newPaymentsApi, newPaymentReconciliationApi, newCustodyApi } from './adapters/payments';
 import { newStaffApi, newAccessApi } from './adapters/staff';
+import { newLeadsApi } from './adapters/leads';
+import { newProductsApi } from './adapters/products';
 
 const legacyAuthApi = {
   login: (email, password, remember = false) => client.post('/auth/login', { email, password, remember }),
@@ -22,13 +24,14 @@ const legacyAuthApi = {
 // With VITE_USE_NEW_SERVER=true the same screens talk to the new server through the adapter; otherwise nothing changes.
 export const authApi = USE_NEW_SERVER ? newAuthApi : legacyAuthApi;
 
-export const productsApi = {
+const legacyProductsApi = {
   list: (params) => client.get('/products', { params }),
   getByBarcode: (code) => client.get(`/products/barcode/${code}`),
   create: (data) => client.post('/products', data),
   update: (id, data) => client.put(`/products/${id}`, data),
   remove: (id) => client.delete(`/products/${id}`),
 };
+export const productsApi = USE_NEW_SERVER ? newProductsApi : legacyProductsApi;
 
 export const categoriesApi = {
   list: (params) => client.get('/categories', { params }),
@@ -133,7 +136,7 @@ export const reportsApi = {
   topProductsByChannel: (params) => client.get('/reports/top-products-by-channel', { params }),
 };
 
-export const leadsApi = {
+const legacyLeadsApi = {
   list: (params) => client.get('/leads', { params }),
   stats: () => client.get('/leads/stats'),
   getById: (id) => client.get(`/leads/${id}`),
@@ -144,6 +147,7 @@ export const leadsApi = {
   addActivity: (id, data) => client.post(`/leads/${id}/activities`, data),
   remove: (id) => client.delete(`/leads/${id}`),
 };
+export const leadsApi = USE_NEW_SERVER ? newLeadsApi : legacyLeadsApi;
 
 export const requisitionsApi = {
   list: (params) => client.get('/requisitions', { params }),

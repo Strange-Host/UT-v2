@@ -1,0 +1,19 @@
+{
+  "lead": {
+    "id": 2,
+    "name": "Otieno",
+    "phone": "0733000002",
+    "source": "manual",
+    "productInterest": null,
+    "notes": null,
+    "status": "lost",
+    "assignedTo": null,
+    "lostReason": "Bought elsewhere",
+    "convertedOrderRef": null,
+    "convertedAt": null,
+    "createdBy": "manager4xz87a",
+    "createdAt": "2026-10-28T23:54:02.932Z",
+    "updatedAt": "2026-10-28T23:54:02.936Z",
+    "messages": []
+  }
+}

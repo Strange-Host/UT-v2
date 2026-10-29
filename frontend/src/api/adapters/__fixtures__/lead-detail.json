@@ -1,0 +1,36 @@
+{
+  "lead": {
+    "id": 1,
+    "name": "Achieng",
+    "phone": "0733000001",
+    "source": "whatsapp",
+    "productInterest": null,
+    "notes": "Wants size 40",
+    "status": "contacted",
+    "assignedTo": "manager4xz87a",
+    "lostReason": null,
+    "convertedOrderRef": null,
+    "convertedAt": null,
+    "createdBy": "manager4xz87a",
+    "createdAt": "2026-10-28T23:54:02.895Z",
+    "updatedAt": "2026-10-28T23:54:02.917Z",
+    "messages": [
+      {
+        "id": 1,
+        "direction": "inbound",
+        "channel": "internal",
+        "body": "Still interested",
+        "actor": "manager4xz87a",
+        "at": "2026-10-28T23:54:02.901Z"
+      },
+      {
+        "id": 2,
+        "direction": "note",
+        "channel": "call",
+        "body": "Called, no answer",
+        "actor": "manager4xz87a",
+        "at": "2026-10-28T23:54:02.907Z"
+      }
+    ]
+  }
+}

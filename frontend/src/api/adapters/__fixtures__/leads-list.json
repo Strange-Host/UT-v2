@@ -1,0 +1,21 @@
+{
+  "total": 1,
+  "leads": [
+    {
+      "id": 1,
+      "name": "Achieng",
+      "phone": "0733000001",
+      "source": "whatsapp",
+      "productInterest": null,
+      "notes": "Wants size 40",
+      "status": "contacted",
+      "assignedTo": "manager4xz87a",
+      "lostReason": null,
+      "convertedOrderRef": null,
+      "convertedAt": null,
+      "createdBy": "manager4xz87a",
+      "createdAt": "2026-10-28T23:54:02.895Z",
+      "updatedAt": "2026-10-28T23:54:02.917Z"
+    }
+  ]
+}

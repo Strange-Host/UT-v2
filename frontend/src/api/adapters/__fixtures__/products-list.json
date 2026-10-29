@@ -1,0 +1,21 @@
+{
+  "total": 1,
+  "products": [
+    {
+      "id": 1,
+      "sku": "LD-1",
+      "name": "Lead shoe",
+      "category": "Shoes",
+      "priceCents": 250000,
+      "costCents": 100000,
+      "trackStock": true,
+      "reorderLevel": 0,
+      "active": true,
+      "createdAt": "2026-10-28T23:54:02.880Z",
+      "onHand": 10,
+      "reserved": 1,
+      "available": 9,
+      "lowStock": false
+    }
+  ]
+}

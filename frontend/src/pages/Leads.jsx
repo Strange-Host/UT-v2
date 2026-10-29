@@ -4,27 +4,27 @@ import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-quer
 import { leadsApi, staffApi } from '../api/endpoints';
 import { getErrorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/UIContext';
+import { useToast, useDialog } from '../context/UIContext';
 import Pager, { usePager } from '../components/Pager';
 import { fetchAll } from '../api/fetchAll';
 
 import Sheet from '../components/Sheet';
 import ConvertLeadSheet from '../components/ConvertLeadSheet';
 import { FormLabel, FormInput, FormSelect, FormTextarea, ErrorBanner } from '../components/FormUI';
-const SOURCES = ['whatsapp', 'walk_in', 'referral', 'shopify', 'other'];
-const STATUS_LABELS = { new: 'New', contacted: 'Contacted', rescheduled: 'Rescheduled', converted: 'Converted', cancelled: 'Cancelled' };
+const SOURCES = ['whatsapp', 'walk_in', 'phone', 'website', 'shopify', 'other'];
+const STATUS_LABELS = { new: 'New', contacted: 'Contacted', qualified: 'Qualified', converted: 'Converted', cancelled: 'Cancelled' };
 const STATUS_COLORS = {
   new: 'bg-line text-text-muted',
   contacted: 'bg-accent/20 text-accent-ink',
-  rescheduled: 'bg-accent/20 text-accent-ink',
+  qualified: 'bg-accent/20 text-accent-ink',
   converted: 'bg-success-soft text-success',
   cancelled: 'bg-danger-soft text-danger',
 };
 // Mirrors the backend state machine — for UI affordance only; the server is the source of truth.
 const NEXT_STATUSES = {
-  new: ['contacted', 'cancelled'],
-  contacted: ['rescheduled', 'converted', 'cancelled'],
-  rescheduled: ['contacted', 'converted', 'cancelled'],
+  new: ['contacted', 'qualified', 'cancelled'],
+  contacted: ['qualified', 'converted', 'cancelled'],
+  qualified: ['converted', 'cancelled'],
   converted: [],
   cancelled: [],
 };
@@ -33,6 +33,7 @@ const emptyActivity = { type: 'call', content: '' };
 
 export default function Leads() {
   const toast = useToast();
+  const dialog = useDialog();
   const { hasRole } = useAuth();
   const canAssign = hasRole('admin', 'manager');
   const [statusFilter, setStatusFilter] = useState('');
@@ -42,7 +43,6 @@ export default function Leads() {
   const [error, setError] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [converting, setConverting] = useState(false);
-  const [followUpDate, setFollowUpDate] = useState('');
   const [activityForm, setActivityForm] = useState(emptyActivity);
   const queryClient = useQueryClient();
 
@@ -82,7 +82,9 @@ export default function Leads() {
     e.preventDefault();
     setError('');
     try {
-      await leadsApi.create({ ...form, assigned_staff_id: form.assigned_staff_id || undefined });
+      const res = await leadsApi.create({ ...form, assigned_staff_id: form.assigned_staff_id || undefined });
+      // The same phone number already has an open lead: nothing new is made, and the server says so.
+      if (res?.data?.data?.duplicate) toast.info('That phone number already has an open lead, so no second one was made.');
       invalidate();
       setCreating(false);
       setForm(emptyForm);
@@ -93,9 +95,13 @@ export default function Leads() {
 
   async function handleStatusChange(status) {
     try {
-      await leadsApi.changeStatus(selectedId, status, status === 'rescheduled' ? followUpDate : undefined);
+      let reason;
+      if (status === 'cancelled') {
+        reason = await dialog.prompt({ message: 'Why is this lead being cancelled?', required: true });
+        if (!reason) return;
+      }
+      await leadsApi.changeStatus(selectedId, status, undefined, reason);
       invalidate();
-      setFollowUpDate('');
     } catch (err) {
       toast.error(getErrorMessage(err, 'Could not update status.'));
     }
@@ -193,7 +199,6 @@ export default function Leads() {
       {selectedId && selectedLead && (
         <LeadDetailSheet
           lead={selectedLead}
-          followUpDate={followUpDate} setFollowUpDate={setFollowUpDate}
           activityForm={activityForm} setActivityForm={setActivityForm}
           onStatusChange={handleStatusChange} onAddActivity={handleAddActivity}
           onConvert={() => setConverting(true)} onClose={() => setSelectedId(null)}
@@ -258,11 +263,11 @@ function NewLeadSheet({ form, setForm, error, canAssign, staffList, onSubmit, on
 }
 
 function LeadDetailSheet({
-  lead, followUpDate, setFollowUpDate, activityForm, setActivityForm, onStatusChange, onAddActivity, onConvert, onClose,
+  lead, activityForm, setActivityForm, onStatusChange, onAddActivity, onConvert, onClose,
 }) {
   const nextStatuses = NEXT_STATUSES[lead.status] || [];
   // 'converted' is reached through "Convert to order" below, so a lead is never marked converted with no order.
-  const quickStatuses = nextStatuses.filter((s) => s !== 'rescheduled' && s !== 'converted');
+  const quickStatuses = nextStatuses.filter((s) => s !== 'converted');
   // A brand-new lead can be converted straight away even though the state machine lists no 'converted' step for it.
   const canConvert = nextStatuses.includes('converted') || lead.status === 'new';
   const productOrForm = lead.interested_product_name || lead.form_name;
@@ -303,16 +308,6 @@ function LeadDetailSheet({
         <div className="mb-4">
           <div className="text-xs font-medium text-text-muted mb-2">Move to</div>
           <div className="flex flex-wrap gap-2">
-            {nextStatuses.includes('rescheduled') && (
-              <div className="flex gap-1 items-center">
-                <input type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)}
-                  className="px-2 py-1.5 rounded-lg border border-line text-xs" />
-                <button onClick={() => onStatusChange('rescheduled')} disabled={!followUpDate}
-                  className="px-3 py-1.5 rounded-lg border border-line text-xs font-medium hover:bg-paper disabled:opacity-40">
-                  Reschedule
-                </button>
-              </div>
-            )}
             {quickStatuses.map((s) => (
               <button key={s} onClick={() => onStatusChange(s)}
                 className="px-3 py-1.5 rounded-lg border border-line text-xs font-medium hover:bg-paper">

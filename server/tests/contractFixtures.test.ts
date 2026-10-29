@@ -159,3 +159,35 @@ describe('what the Staff screens read from the server', () => {
     check('staff-reactivate', reactivate.body);
   });
 });
+
+describe('what the Leads screens read from the server', () => {
+  it('keeps the lead list, one lead with its messages, a repeat enquiry, a conversion and the product list in the recorded shape', async () => {
+    const app = createApp({ pool: db.pool, logger: createLogger('silent'), orderRefKey: KEY });
+    const mgr = await loggedIn(db.pool, 'manager');
+    const as = (r: request.Test) => r.set('Authorization', mgr.auth);
+    const product = (await as(request(app).post('/api/products')).send({ sku: 'LD-1', name: 'Lead shoe', category: 'Shoes', priceCents: 250_000, costCents: 100_000 })).body.product;
+    await as(request(app).post(`/api/products/${product.id}/receive`)).send({ quantity: 10, unitCostCents: 100_000 });
+
+    const made = await as(request(app).post('/api/leads')).send({ name: 'Achieng', phone: '0733000001', source: 'whatsapp', notes: 'Wants size 40' });
+    const again = await as(request(app).post('/api/leads')).send({ phone: '0733000001', message: 'Still interested' });
+    const id = made.body.lead.id as number;
+    await as(request(app).post(`/api/leads/${id}/messages`)).send({ direction: 'note', channel: 'call', body: 'Called, no answer' });
+    await as(request(app).put(`/api/leads/${id}/status`)).send({ status: 'contacted' });
+    await as(request(app).put(`/api/leads/${id}/assignee`)).send({ assignedTo: mgr.username });
+    const list = await as(request(app).get('/api/leads?limit=25'));
+    const one = await as(request(app).get(`/api/leads/${id}`));
+    const second = (await as(request(app).post('/api/leads')).send({ name: 'Otieno', phone: '0733000002' })).body.lead.id as number;
+    const lost = await as(request(app).put(`/api/leads/${second}/status`)).send({ status: 'lost', lostReason: 'Bought elsewhere' });
+    const converted = await as(request(app).post(`/api/leads/${id}/convert`)).send({ items: [{ sku: 'LD-1', name: 'Lead shoe', quantity: 1, unitPriceCents: 250_000 }], notes: 'Payment: cod' });
+    const products = await as(request(app).get('/api/products?limit=50&active=true'));
+    expect([made.status, again.status, list.status, one.status, lost.status, converted.status, products.status]).toEqual([201, 200, 200, 200, 200, 201, 200]);
+    expect(again.body.duplicate).toBe(true);
+    check('leads-list', list.body);
+    check('lead-detail', one.body);
+    check('lead-created', made.body);
+    check('lead-duplicate', again.body);
+    check('lead-lost', lost.body);
+    check('lead-converted', converted.body);
+    check('products-list', products.body);
+  });
+});
