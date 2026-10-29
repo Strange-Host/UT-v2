@@ -19,6 +19,7 @@ migrates the database by itself.
 | `REFRESH_COOKIE_SAMESITE` | Check | `strict` | `strict` when the app and the API share a site (e.g. `app.example.com` + `api.example.com`). `none` only for unrelated domains, and then needs HTTPS. If every reload signs you out, look here first. |
 | `TRUST_PROXY_HOPS` | Check | `1` | Number of proxies in front of the server. Wrong value makes every visitor share one sign-in allowance, or makes audit rows show the proxy's address. |
 | `PAYMENT_WEBHOOK_SECRET` | **Yes** if M-Pesa callbacks are used | none | 16+ characters; the secret inside the callback URL registered with Safaricom. |
+| `FIRST_ADMIN_USERNAME`, `FIRST_ADMIN_PASSWORD`, `FIRST_ADMIN_NAME` | Optional | none | Creates the first admin on start-up when no accounts exist. Password rules: 12+ characters, not common. Delete the password variable after first sign-in. |
 | `PORT` | Usually set by the host | `3000` | |
 | `INTEGRITY_JOB` | No | `true` | Nightly integrity check. Set `false` only on a staging copy. |
 | `INTEGRITY_HOUR` | No | `2` | Hour of the nightly check, shop time (East Africa Time). |

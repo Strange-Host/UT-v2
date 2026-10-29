@@ -71,9 +71,13 @@ The refresh token is a cookie that the browser only sends if it considers the ap
 
 ## 4. First start
 1. Deploy the API. Open `https://<api-address>/api/health`: expect `status: ok`, `database: up`, and a migrations count that matches the files in `server/migrations`.
-2. Create the first admin from the service's shell *(check: Railway CLI `railway shell`/`railway ssh`, or the dashboard)*:
-   `npm run create-admin:prod -- --username <you> --name "<Your Name>"`
-   It prints a one-time password once. There is no default password.
+2. Create the first admin. **Easiest:** on the API service add three variables, then redeploy:
+   - `FIRST_ADMIN_USERNAME` (e.g. `owner`)
+   - `FIRST_ADMIN_PASSWORD` (a passphrase you choose: at least 12 characters, not a common password, not containing the username)
+   - `FIRST_ADMIN_NAME` (optional display name)
+
+   On start-up the server creates that admin only if there are no accounts at all, so it does nothing on later starts. You are still forced to change the password at first sign-in. **After you have signed in, delete `FIRST_ADMIN_PASSWORD`.** If the password is too weak the server refuses to start and the deploy log says why.
+   Alternative from the service's shell: `npm run create-admin:prod -- --username <you> --name "<Your Name>"` (prints a one-time password once).
 3. Run `npm run integrity:prod` once. It should report nothing wrong on an empty database.
 4. Deploy the staff app and sign in with the admin account. Reload the page: you should stay signed in.
 5. Check from a phone, not only a laptop.

@@ -39,6 +39,10 @@ const schema = z.object({
   SECRETS_KEY: z.string().min(32, 'SECRETS_KEY must be at least 32 characters').optional(),
   // The token inside the callback URL registered with Safaricom. The legacy server uses the same variable, so existing registrations keep working.
   PAYMENT_WEBHOOK_SECRET: z.string().min(16, 'PAYMENT_WEBHOOK_SECRET must be at least 16 characters').optional(),
+  // Optional: creates the very first admin on start-up when no accounts exist yet (see docs/DEPLOY.md). Remove the password after first sign-in.
+  FIRST_ADMIN_USERNAME: z.string().optional(),
+  FIRST_ADMIN_PASSWORD: z.string().optional(),
+  FIRST_ADMIN_NAME: z.string().optional(),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 

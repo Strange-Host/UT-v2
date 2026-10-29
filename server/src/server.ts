@@ -6,11 +6,19 @@ import { scheduleNightlyIntegrity } from './integrity/job.js';
 import { scheduleStorePoll } from './integrations/pullOrders.js';
 import { scheduleSmsWorker } from './sms/sms.js';
 import { createLogger } from './logger.js';
+import { bootstrapFirstAdmin } from './auth/bootstrap.js';
 
 const config = loadConfig();
 const logger = createLogger(config.LOG_LEVEL);
 const pool = createPool(config.DATABASE_URL, { ssl: config.DATABASE_SSL === 'true' });
 const smsEnv = { userId: config.ZETTATEL_USER_ID, password: config.ZETTATEL_PASSWORD, senderId: config.ZETTATEL_SENDER_ID };
+try {
+  const first = await bootstrapFirstAdmin(pool, { username: config.FIRST_ADMIN_USERNAME, password: config.FIRST_ADMIN_PASSWORD, name: config.FIRST_ADMIN_NAME });
+  if (first === 'created') logger.info({ username: config.FIRST_ADMIN_USERNAME?.trim().toLowerCase() }, 'first admin created; sign in, change the password, then delete FIRST_ADMIN_PASSWORD');
+} catch (err) {
+  logger.error({ err: (err as Error).message }, 'FIRST_ADMIN_* variables are set but the first admin could not be created');
+  process.exit(1);
+}
 const server = createApp({ pool, logger, sessionHours: config.SESSION_HOURS, orderRefKey: config.ORDER_REF_KEY, secretsKey: config.SECRETS_KEY, webhookSecret: config.PAYMENT_WEBHOOK_SECRET, sms: { envCredentials: smsEnv, sendUrl: config.ZETTATEL_SEND_URL },
   corsOrigins: config.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean), trustProxyHops: config.TRUST_PROXY_HOPS,
   secureCookies: config.NODE_ENV === 'production', cookieSameSite: config.REFRESH_COOKIE_SAMESITE, accessTokenMinutes: config.ACCESS_TOKEN_MINUTES, refreshTokenDays: config.REFRESH_TOKEN_DAYS,
