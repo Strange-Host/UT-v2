@@ -16,14 +16,13 @@ Source of this table: the `update` branch of the old repo as of 28 Oct 2026, che
 ## State of each page
 
 ### Done: page talks to the new server through an adapter (has fixtures and tests)
-Login, Change password, Orders, Payments, Payment reconciliation, Couriers, Leads (with Convert lead; the product picker reads `/api/products`), Staff (with Remove account and Access & permissions; also checked by `frontend/src/e2e/staff.e2e.test.jsx` against a running server).
+Login, Change password, Orders, Payments, Payment reconciliation, Couriers, Security (no security-events list yet), Leads (with Convert lead; the product picker reads `/api/products`), Staff (with Remove account and Access & permissions; also checked by `frontend/src/e2e/staff.e2e.test.jsx` against a running server).
 
 ### Server ready, adapter still to write
 | Page | New-server routes that exist |
 |---|---|
 | Products, POS terminal, Sales history | `/api/products`, stock movements, `/api/sales`, void, refund, `/api/till/*` |
 | Payroll, Attendance (clock in/out) | `/api/payroll/*`, `/api/attendance/*` |
-| Security | `/api/security`, `/api/auth/sessions` |
 | Settings > Messaging | `/api/sms/*` |
 | Dashboard | `/api/reports/*` (3 reports only: discounts, risky actions, trial balance) |
 | Settings > Income sources, Shopify/Woo orders | `/api/integrations/*`, `/api/online-orders/pull`, order webhooks |

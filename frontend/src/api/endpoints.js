@@ -6,6 +6,7 @@ import { newCouriersApi } from './adapters/couriers';
 import { newPaymentsApi, newPaymentReconciliationApi, newCustodyApi } from './adapters/payments';
 import { newStaffApi, newAccessApi } from './adapters/staff';
 import { newLeadsApi } from './adapters/leads';
+import { newSecurityApi } from './adapters/security';
 import { newProductsApi } from './adapters/products';
 
 const legacyAuthApi = {
@@ -199,11 +200,12 @@ const legacyStaffApi = {
   unlockAccount: (id) => client.post(`/staff/${id}/unlock-account`, {}),
 };
 
-export const securityApi = {
+const legacySecurityApi = {
   policy: () => client.get('/security/policy'),
   updatePolicy: (data) => client.put('/security/policy', data),
   events: (params) => client.get('/security/events', { params }),
 };
+export const securityApi = USE_NEW_SERVER ? newSecurityApi : legacySecurityApi;
 
 export const staffLogsApi = {  list: (params) => client.get('/staff-logs', { params }),
   stats: (params) => client.get('/staff-logs/stats', { params }),

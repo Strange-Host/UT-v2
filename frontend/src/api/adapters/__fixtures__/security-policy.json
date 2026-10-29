@@ -1,0 +1,32 @@
+{
+  "policy": {
+    "lockout": {
+      "attempts": 5,
+      "minutes": 15
+    },
+    "roles": {
+      "admin": {
+        "lockMinutes": 10,
+        "idleSignOutMinutes": 30,
+        "maxHours": 24
+      },
+      "manager": {
+        "lockMinutes": 10,
+        "idleSignOutMinutes": 60,
+        "maxHours": 168
+      },
+      "cashier": {
+        "lockMinutes": 5,
+        "idleSignOutMinutes": 30,
+        "maxHours": 12
+      }
+    },
+    "unrememberedMaxHours": 12,
+    "reauthMinutes": 5,
+    "alerts": {
+      "refundKes": 3000,
+      "stockUnits": 25,
+      "pricePercent": 15
+    }
+  }
+}

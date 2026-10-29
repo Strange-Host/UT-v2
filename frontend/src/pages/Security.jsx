@@ -203,7 +203,7 @@ function PolicyEditor() {
 const SEVERITY = { urgent: 'bg-danger-soft text-danger', warning: 'bg-accent/25 text-ink', info: 'bg-line text-text-muted' };
 
 function EventsList() {
-  const { data: events = [], isLoading } = useQuery({
+  const { data: events = [], isLoading, error } = useQuery({
     queryKey: ['security-events'],
     queryFn: () => securityApi.events({ limit: 40 }).then((r) => r.data.data),
     refetchInterval: 60_000,
@@ -212,7 +212,8 @@ function EventsList() {
     <section className="bg-surface border border-line rounded-xl p-4 md:p-5">
       <h2 className="font-medium mb-3">Recent security events</h2>
       {isLoading && <p className="text-sm text-text-muted">Loading…</p>}
-      {!isLoading && events.length === 0 && <p className="text-sm text-text-muted">Nothing yet. Lockouts, password resets, large refunds and similar things will be listed here.</p>}
+      {error && <p className="text-sm text-text-muted">{getErrorMessage(error, 'Could not load the security events.')}</p>}
+      {!isLoading && !error && events.length === 0 && <p className="text-sm text-text-muted">Nothing yet. Lockouts, password resets, large refunds and similar things will be listed here.</p>}
       <ul className="divide-y divide-line">
         {events.map((e) => (
           <li key={e.id} className="py-3">

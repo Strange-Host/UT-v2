@@ -191,3 +191,23 @@ describe('what the Leads screens read from the server', () => {
     check('products-list', products.body);
   });
 });
+
+describe('what the Security screen reads from the server', () => {
+  it('keeps the sign-in rules, a saved change, and the sign-out answers in the recorded shape', async () => {
+    const app = createApp({ pool: db.pool, logger: createLogger('silent') });
+    const admin = await loggedIn(db.pool, 'admin');
+    const as = (r: request.Test) => r.set('Authorization', admin.auth);
+    const other = await request(app).post('/api/auth/login').send({ username: admin.username, password: admin.password });
+    const third = await request(app).post('/api/auth/login').send({ username: admin.username, password: admin.password });
+    const policy = await as(request(app).get('/api/security/policy'));
+    const saved = await as(request(app).put('/api/security/policy')).send(policy.body.policy);
+    const ended = await as(request(app).delete(`/api/auth/sessions/${other.body.session.id}`));
+    const others = await as(request(app).post('/api/auth/sessions/revoke-others')).send({});
+    expect([other.status, third.status, policy.status, saved.status, ended.status, others.status]).toEqual([200, 200, 200, 200, 200, 200]);
+    expect(others.body.ended).toBeGreaterThanOrEqual(1);
+    check('security-policy', policy.body);
+    check('security-policy-saved', saved.body);
+    check('auth-session-ended', ended.body);
+    check('auth-revoke-others', others.body);
+  });
+});
